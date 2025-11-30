@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
@@ -24,6 +24,32 @@ const App: React.FC = () => {
   // Animation States
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStepIndex, setScanStepIndex] = useState(0);
+
+  // --- IFRAME RESIZER LOGIC ---
+  useEffect(() => {
+    const sendHeight = () => {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: 'setHeight', height: height }, '*');
+    };
+
+    // Send height on load
+    sendHeight();
+
+    // Observe body size changes
+    const resizeObserver = new ResizeObserver(() => {
+      sendHeight();
+    });
+    
+    resizeObserver.observe(document.body);
+
+    // Also send height periodically to catch animations
+    const interval = setInterval(sendHeight, 500);
+
+    return () => {
+      resizeObserver.disconnect();
+      clearInterval(interval);
+    };
+  }, [result, loadingState, scanStepIndex]); // Re-run when state changes drastically
 
   useEffect(() => {
     let progressInterval: ReturnType<typeof setInterval>;
@@ -114,6 +140,9 @@ const App: React.FC = () => {
     setPreviewUrl(objectUrl);
     setLoadingState({ status: 'analyzing', message: 'Scanning image for defects...' });
     setResult(null);
+    
+    // Scroll to top lightly to ensure user sees the scanner
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
       // 2. Compress image to prevent XHR/RPC errors
