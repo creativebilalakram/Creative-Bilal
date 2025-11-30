@@ -1,0 +1,7 @@
+{
+  "name": "AusBuild Inspect AI",
+  "description": "A preliminary visual assessment tool for building defects using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
