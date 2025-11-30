@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AusBuild Inspect AI</title>
-    <!-- Tailwind CDN is fine for this setup -->
+    <!-- Keep Tailwind CDN for styling if local setup is missing config -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -47,7 +47,8 @@
         }
       }
     </style>
-  <script type="importmap">
+    <!-- IMPORT MAP REMOVED: This was causing the white screen crash -->
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
