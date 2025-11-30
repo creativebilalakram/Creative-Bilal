@@ -32,10 +32,12 @@ export const LeadForm: React.FC<LeadFormProps> = ({ onSubmit }) => {
     try {
         if (GOOGLE_APPS_SCRIPT_URL) {
             // Send data to Google Sheets
+            // NOTE: Using 'text/plain' prevents CORS preflight (OPTIONS) requests, 
+            // ensuring the POST reaches Google Scripts successfully in no-cors mode.
             await fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", // Important for Google Scripts
-                headers: { "Content-Type": "application/json" },
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(formData)
             });
         } else {
