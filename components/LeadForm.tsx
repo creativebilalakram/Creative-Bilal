@@ -22,41 +22,42 @@ export const LeadForm: React.FC<LeadFormProps> = ({ onSubmit }) => {
     setIsSubmitting(true);
 
     // --- GOOGLE SHEETS CONFIGURATION ---
-    // STEP 1: Create a Google Sheet
-    // STEP 2: Extensions > Apps Script
-    // STEP 3: Paste the code provided in the chat instructions
-    // STEP 4: Deploy > New Deployment > Select "Web App" > Who has access: "Anyone"
-    // STEP 5: Paste the Web App URL below inside the quotes
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvptjS-lTi-jNN1cEoW6JShdoN2sOS0akJhKaSPTpW--n7x1yCB9MHoHoYQHJGfRax/exec"; 
 
     try {
         if (GOOGLE_APPS_SCRIPT_URL) {
-            // Send data to Google Sheets
-            // NOTE: Using 'text/plain' prevents CORS preflight (OPTIONS) requests, 
-            // ensuring the POST reaches Google Scripts successfully in no-cors mode.
+            // FIX: Using URLSearchParams is much more reliable for Google Scripts
+            // than JSON body when using no-cors.
+            const params = new URLSearchParams();
+            params.append('name', formData.name);
+            params.append('email', formData.email);
+            params.append('phone', formData.phone);
+            params.append('suburb', formData.suburb);
+            params.append('propertyType', formData.propertyType);
+            params.append('urgency', formData.urgency);
+            params.append('created_at', new Date().toISOString());
+
             await fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors", 
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify(formData)
+                headers: { 
+                    "Content-Type": "application/x-www-form-urlencoded" 
+                },
+                body: params.toString()
             });
         } else {
-            // Simulate delay if no URL is present (for demo)
             await new Promise(resolve => setTimeout(resolve, 800));
         }
 
-        // --- SAVE TO LOCAL STORAGE (Feature #2) ---
-        // This remembers the user so they don't have to fill the form again
+        // --- SAVE TO LOCAL STORAGE (Immediate Fix) ---
         localStorage.setItem('ausbuild_user_profile', JSON.stringify(formData));
         
         console.log("Lead captured & saved:", formData);
-        
-        // Unlock the report
         onSubmit(formData);
 
     } catch (err) {
         console.error("Submission failed", err);
-        // Even if sheet fails, unlock the report for better UX, but maybe log error
+        // Fail-safe: user can still see report if api fails
         onSubmit(formData);
     } finally {
         setIsSubmitting(false);

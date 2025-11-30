@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AnalysisResult, LeadProfile } from '../types';
-import { AlertTriangle, CheckCircle, Info, ArrowRight, Download, FileText, Activity, AlertOctagon, TrendingUp, Layers } from 'lucide-react';
+import { CheckCircle, ArrowRight, Download, FileText, Activity, AlertOctagon, TrendingUp, Layers } from 'lucide-react';
 import { LeadForm } from './LeadForm';
 import { jsPDF } from 'jspdf';
 
@@ -11,24 +11,24 @@ interface AnalysisReportProps {
 }
 
 export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, previewUrl }) => {
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [lead, setLead] = useState<LeadProfile | null>(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
-  // FEATURE: Check if user has already submitted lead form previously
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('ausbuild_user_profile');
-    if (savedProfile) {
-        try {
-            const parsedProfile = JSON.parse(savedProfile);
-            setLead(parsedProfile);
-            setIsUnlocked(true); // Automatically unlock if user exists
-        } catch (e) {
-            console.error("Failed to parse saved user profile");
-            localStorage.removeItem('ausbuild_user_profile');
-        }
+  // FEATURE FIX: Initialize state DIRECTLY from localStorage.
+  // This ensures the form is hidden immediately on the first render if data exists.
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+        return !!localStorage.getItem('ausbuild_user_profile');
     }
-  }, []);
+    return false;
+  });
+
+  const [lead, setLead] = useState<LeadProfile | null>(() => {
+      if (typeof window !== 'undefined') {
+          const saved = localStorage.getItem('ausbuild_user_profile');
+          return saved ? JSON.parse(saved) : null;
+      }
+      return null;
+  });
+  
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const handleUnlock = (profile: LeadProfile) => {
     console.log("Lead captured:", profile);
