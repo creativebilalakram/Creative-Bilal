@@ -25,31 +25,45 @@ const App: React.FC = () => {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStepIndex, setScanStepIndex] = useState(0);
 
-  // --- IFRAME RESIZER LOGIC ---
+  // --- IFRAME RESIZER LOGIC (IMPROVED) ---
   useEffect(() => {
     const sendHeight = () => {
-      const height = document.body.scrollHeight;
-      window.parent.postMessage({ type: 'setHeight', height: height }, '*');
+      // We target the 'root' div because document.body.scrollHeight can sometimes 
+      // get stuck at a larger size in iframes.
+      const rootElement = document.getElementById('root');
+      if (rootElement) {
+        // Add a tiny buffer (10px) to prevent scrollbar flickering
+        const height = rootElement.offsetHeight + 10;
+        window.parent.postMessage({ type: 'setHeight', height: height }, '*');
+      }
     };
 
-    // Send height on load
+    // 1. Send height immediately on load
     sendHeight();
 
-    // Observe body size changes
+    // 2. Observer for DOM changes (animations, expanding sections)
     const resizeObserver = new ResizeObserver(() => {
       sendHeight();
     });
     
-    resizeObserver.observe(document.body);
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      resizeObserver.observe(rootEl);
+    }
 
-    // Also send height periodically to catch animations
+    // 3. Fallback interval to catch anything the observer misses
     const interval = setInterval(sendHeight, 500);
+
+    // 4. Force update when key states change (Resetting, Loading finishing)
+    // This timeout ensures React has finished painting the new layout (e.g. shrinking back to Hero)
+    const stateChangeTimeout = setTimeout(sendHeight, 100);
 
     return () => {
       resizeObserver.disconnect();
       clearInterval(interval);
+      clearTimeout(stateChangeTimeout);
     };
-  }, [result, loadingState, scanStepIndex]); // Re-run when state changes drastically
+  }, [result, loadingState, scanStepIndex, previewUrl]); 
 
   useEffect(() => {
     let progressInterval: ReturnType<typeof setInterval>;
@@ -166,10 +180,14 @@ const App: React.FC = () => {
     setPreviewUrl(null);
     setLoadingState({ status: 'idle' });
     setScanProgress(0);
+    // Force immediate scroll to top to help resize
+    window.scrollTo(0, 0);
   };
 
   return (
-    <div className="min-h-screen font-sans text-slate-900 bg-white selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
+    // CHANGED: Removed 'min-h-screen'. Using 'w-full' and 'h-fit' allows the container to shrink to content.
+    // 'bg-white' ensures no transparency issues.
+    <div className="w-full h-fit font-sans text-slate-900 bg-white selection:bg-blue-100 flex flex-col relative overflow-hidden">
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
@@ -195,7 +213,7 @@ const App: React.FC = () => {
         {!previewUrl ? (
           <Hero onImageSelected={handleImageSelected} isLoading={false} />
         ) : (
-          <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 animate-fade-in pb-24">
+          <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 animate-fade-in pb-12">
             <div className="space-y-8">
               
               {/* === PRO ANALYSIS INTERFACE === */}
