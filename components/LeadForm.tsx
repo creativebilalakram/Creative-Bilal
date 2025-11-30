@@ -21,28 +21,44 @@ export const LeadForm: React.FC<LeadFormProps> = ({ onSubmit }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // --- GOOGLE SHEETS INTEGRATION ---
-    const GOOGLE_APPS_SCRIPT_URL = ""; 
+    // --- GOOGLE SHEETS CONFIGURATION ---
+    // STEP 1: Create a Google Sheet
+    // STEP 2: Extensions > Apps Script
+    // STEP 3: Paste the code provided in the chat instructions
+    // STEP 4: Deploy > New Deployment > Select "Web App" > Who has access: "Anyone"
+    // STEP 5: Paste the Web App URL below inside the quotes
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvptjS-lTi-jNN1cEoW6JShdoN2sOS0akJhKaSPTpW--n7x1yCB9MHoHoYQHJGfRax/exec"; 
 
-    if (GOOGLE_APPS_SCRIPT_URL) {
-        try {
+    try {
+        if (GOOGLE_APPS_SCRIPT_URL) {
+            // Send data to Google Sheets
             await fetch(GOOGLE_APPS_SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors",
+                mode: "no-cors", // Important for Google Scripts
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             });
-            console.log("Submitted to Google Sheet");
-        } catch (err) {
-            console.error("Submission failed", err);
+        } else {
+            // Simulate delay if no URL is present (for demo)
+            await new Promise(resolve => setTimeout(resolve, 800));
         }
-    } else {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        console.log("Mock data submitted:", formData);
-    }
 
-    setIsSubmitting(false);
-    onSubmit(formData);
+        // --- SAVE TO LOCAL STORAGE (Feature #2) ---
+        // This remembers the user so they don't have to fill the form again
+        localStorage.setItem('ausbuild_user_profile', JSON.stringify(formData));
+        
+        console.log("Lead captured & saved:", formData);
+        
+        // Unlock the report
+        onSubmit(formData);
+
+    } catch (err) {
+        console.error("Submission failed", err);
+        // Even if sheet fails, unlock the report for better UX, but maybe log error
+        onSubmit(formData);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

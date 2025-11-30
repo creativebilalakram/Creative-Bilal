@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnalysisResult, LeadProfile } from '../types';
 import { AlertTriangle, CheckCircle, Info, ArrowRight, Download, FileText, Activity, AlertOctagon, TrendingUp, Layers } from 'lucide-react';
 import { LeadForm } from './LeadForm';
@@ -14,6 +14,21 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [lead, setLead] = useState<LeadProfile | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // FEATURE: Check if user has already submitted lead form previously
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('ausbuild_user_profile');
+    if (savedProfile) {
+        try {
+            const parsedProfile = JSON.parse(savedProfile);
+            setLead(parsedProfile);
+            setIsUnlocked(true); // Automatically unlock if user exists
+        } catch (e) {
+            console.error("Failed to parse saved user profile");
+            localStorage.removeItem('ausbuild_user_profile');
+        }
+    }
+  }, []);
 
   const handleUnlock = (profile: LeadProfile) => {
     console.log("Lead captured:", profile);
