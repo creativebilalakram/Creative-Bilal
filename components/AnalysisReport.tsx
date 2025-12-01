@@ -44,267 +44,329 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
     setIsGeneratingPdf(true);
     try {
         const doc = new jsPDF();
+        
+        // --- CONFIG & STYLES ---
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
         const margin = 20;
-        let yPos = 20;
+        const contentWidth = pageWidth - (margin * 2);
+        
+        const colors = {
+            slate900: [15, 23, 42],
+            slate800: [30, 41, 59],
+            slate600: [71, 85, 105],
+            slate500: [100, 116, 139],
+            slate400: [148, 163, 184],
+            slate200: [226, 232, 240],
+            slate50: [248, 250, 252],
+            blue600: [37, 99, 235],
+            red600: [220, 38, 38],
+            orange500: [249, 115, 22],
+            emerald600: [5, 150, 105],
+            white: [255, 255, 255]
+        };
 
-        // --- HELPER: HEADER ---
+        // Helper: Set Color by Array
+        const setFill = (c: number[]) => doc.setFillColor(c[0], c[1], c[2]);
+        const setText = (c: number[]) => doc.setTextColor(c[0], c[1], c[2]);
+        const setDraw = (c: number[]) => doc.setDrawColor(c[0], c[1], c[2]);
+
+        let yPos = 0;
+
+        // --- HEADER FUNCTION ---
         const drawHeader = () => {
-            // Background
-            doc.setFillColor(30, 41, 59); // Slate 900
+            // Dark Header Bar
+            setFill(colors.slate900);
             doc.rect(0, 0, pageWidth, 40, 'F');
             
-            // Logo / Title
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
+            // Branding
+            setText(colors.white);
             doc.setFont("helvetica", "bold");
+            doc.setFontSize(20);
             doc.text("AusBuild Inspect AI", margin, 20);
             
-            // Subtitle
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(148, 163, 184); // Slate 400
-            doc.text("Professional Defect Assessment Report", margin, 30);
-
-            // Date & Ref
             doc.setFontSize(9);
-            doc.setTextColor(255, 255, 255);
+            setText(colors.slate400);
+            doc.setFont("helvetica", "normal");
+            doc.text("Professional Defect Assessment Report", margin, 28);
+
+            // Metadata Right
             const dateStr = new Date().toLocaleDateString();
-            doc.text(`Date: ${dateStr}`, pageWidth - margin, 20, { align: 'right' });
-            doc.setTextColor(148, 163, 184);
-            doc.text(`Ref: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, pageWidth - margin, 30, { align: 'right' });
+            doc.setFontSize(9);
+            setText(colors.white);
+            doc.text(`Date: ${dateStr}`, pageWidth - margin, 18, { align: 'right' });
+            setText(colors.slate400);
+            doc.text(`Ref: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, pageWidth - margin, 28, { align: 'right' });
             
-            return 55; // Return new start Y
+            return 55; // Content Start Y
         };
 
         yPos = drawHeader();
 
-        // --- SECTION 1: EXECUTIVE SUMMARY & IMAGE ---
+        // --- SECTION 1: EXECUTIVE DASHBOARD ---
         
-        let imageBottomY = yPos;
-        // 1. Image (Left Column)
+        // Container Background for Summary
+        setDraw(colors.slate200);
+        setFill(colors.slate50);
+        doc.roundedRect(margin, yPos, contentWidth, 85, 2, 2, 'FD');
+
+        // 1. Image (Left)
         if (base64Image) {
             try {
-                const imgWidth = 80;
-                const imgProps = doc.getImageProperties(`data:image/jpeg;base64,${base64Image}`);
-                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                // Fixed square box for image
+                const imgSize = 75;
+                const imgX = margin + 5;
+                const imgY = yPos + 5;
                 
-                // Border and Image
-                doc.setDrawColor(226, 232, 240); // Slate 200
-                doc.setLineWidth(0.5);
-                doc.rect(margin, yPos, imgWidth, imgHeight);
-                doc.addImage(`data:image/jpeg;base64,${base64Image}`, 'JPEG', margin, yPos, imgWidth, imgHeight);
-                
-                // Caption
-                doc.setFontSize(8);
-                doc.setTextColor(100);
-                doc.setFont("helvetica", "italic");
-                doc.text("Fig 1. Visual evidence analyzed", margin, yPos + imgHeight + 5);
-                
-                imageBottomY = yPos + imgHeight + 15;
+                // Image Background/Border
+                setFill(colors.white);
+                doc.rect(imgX, imgY, imgSize, imgSize, 'F');
+                doc.addImage(`data:image/jpeg;base64,${base64Image}`, 'JPEG', imgX, imgY, imgSize, imgSize, undefined, 'FAST');
+                setDraw(colors.slate200);
+                doc.rect(imgX, imgY, imgSize, imgSize); // Border overlay
             } catch (err) {
                 console.warn("PDF Image Error", err);
             }
         }
 
-        // 2. Summary Data (Right Column)
-        const summaryX = base64Image ? 110 : margin;
-        const summaryWidth = pageWidth - summaryX - margin;
-        let summaryY = yPos;
+        // 2. Metrics & Text (Right)
+        const rightColX = margin + 85;
+        const rightColWidth = contentWidth - 90;
+        let rightY = yPos + 10;
 
-        // Severity Score Badge
-        const scoreColor = data.severityScore > 70 ? [239, 68, 68] : data.severityScore > 40 ? [249, 115, 22] : [16, 185, 129];
-        doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.roundedRect(summaryX, summaryY, 16, 16, 3, 3, 'F');
-        
-        doc.setTextColor(255, 255, 255);
+        // Severity Header
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(data.severityScore.toString(), summaryX + 8, summaryY + 11, { align: 'center' });
+        setText(colors.slate400);
+        doc.text("RISK SEVERITY INDEX", rightColX, rightY);
         
-        doc.setTextColor(30, 41, 59);
+        // Severity Value (Big Number)
+        rightY += 12;
+        doc.setFontSize(36);
+        doc.setFont("helvetica", "bold");
+        
+        const scoreColor = data.severityScore > 70 ? colors.red600 : data.severityScore > 40 ? colors.orange500 : colors.emerald600;
+        setText(scoreColor);
+        doc.text(`${data.severityScore}`, rightColX, rightY);
+        
         doc.setFontSize(12);
-        doc.text("Risk Severity Index", summaryX + 22, summaryY + 11);
+        setText(colors.slate500);
+        doc.text("/ 100", rightColX + 22, rightY); // Adjust based on number width roughly
 
-        summaryY += 25;
-
-        // Executive Summary Text
-        doc.setFontSize(10);
+        // Severity Label Badge
+        const badgeText = data.severityScore > 70 ? "CRITICAL ATTENTION" : data.severityScore > 40 ? "MODERATE RISK" : "LOW RISK";
+        doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 41, 59);
-        doc.text("Executive Summary", summaryX, summaryY);
-        summaryY += 6;
+        setText(colors.white);
         
+        const badgeWidth = doc.getTextWidth(badgeText) + 8;
+        setFill(scoreColor);
+        doc.roundedRect(rightColX + 55, rightY - 10, badgeWidth, 8, 2, 2, 'F');
+        doc.text(badgeText, rightColX + 59, rightY - 5);
+
+        // Summary Text
+        rightY += 15;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        setText(colors.slate800);
+        doc.text("EXECUTIVE SUMMARY", rightColX, rightY);
+        
+        rightY += 5;
+        doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(71, 85, 105);
-        const splitSummary = doc.splitTextToSize(data.summary, summaryWidth);
-        doc.text(splitSummary, summaryX, summaryY);
-        summaryY += (splitSummary.length * 5) + 12;
+        setText(colors.slate600);
+        const splitSummary = doc.splitTextToSize(data.summary, rightColWidth);
+        doc.text(splitSummary, rightColX, rightY);
 
-        // Categories
+        yPos += 100; // Move below summary section
+
+        // --- SECTION 2: DEFECT BREAKDOWN HEADER ---
+        doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 41, 59);
-        doc.text("Detected Categories:", summaryX, summaryY);
-        summaryY += 6;
+        setText(colors.slate900);
+        doc.text("DETAILED DEFECT FINDINGS", margin, yPos);
         
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(71, 85, 105);
-        data.topCategories.forEach(cat => {
-            doc.setFillColor(71, 85, 105);
-            doc.circle(summaryX + 2, summaryY - 1.5, 1, 'F'); // Bullet point
-            doc.text(cat, summaryX + 6, summaryY);
-            summaryY += 6;
-        });
+        // Line
+        setDraw(colors.slate200);
+        doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
+        yPos += 15;
 
-        // Align Y position to the bottom of the tallest column
-        yPos = Math.max(imageBottomY, summaryY) + 10;
+        // --- HELPER: CALCULATE CARD HEIGHT ---
+        const getCardHeight = (issue: any) => {
+             // Roughly calculate height needed for text
+             // Col width is roughly half content width minus padding
+             const colWidth = (contentWidth / 2) - 15;
+             const obsHeight = doc.splitTextToSize(issue.visualDescription, colWidth).length * 4;
+             const causeHeight = doc.splitTextToSize(issue.possibleCause, colWidth).length * 4;
+             const recHeight = doc.splitTextToSize(issue.recommendation, contentWidth - 20).length * 4;
+             
+             // Base padding (header + gaps + footer padding) + max column height + rec height
+             return 40 + Math.max(obsHeight, causeHeight) + 20 + recHeight + 10;
+        };
 
-        // --- SECTION 2: DETAILED FINDINGS ---
-        
-        // Section Header
-        doc.setFillColor(241, 245, 249); // Slate 100
-        doc.rect(margin, yPos, pageWidth - (margin * 2), 12, 'F');
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(30, 41, 59);
-        doc.text("DETAILED DEFECT BREAKDOWN", margin + 4, yPos + 8);
-        yPos += 20;
-
-        // Issues Loop
+        // --- DEFECT CARDS LOOP ---
         data.issues.forEach((issue, index) => {
-            // Check for page break
-            // We need about 50 units for a card. If not enough space, add page.
-            if (yPos > pageHeight - 60) {
+            const cardHeight = getCardHeight(issue);
+            
+            // Check Page Break
+            if (yPos + cardHeight > pageHeight - 20) {
                 doc.addPage();
                 yPos = drawHeader();
+                
+                // Re-print section header if new page
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                setText(colors.slate900);
+                doc.text("DETAILED FINDINGS (CONT.)", margin, yPos);
+                setDraw(colors.slate200);
+                doc.line(margin, yPos + 3, pageWidth - margin, yPos + 3);
+                yPos += 15;
             }
 
-            // Card Header (Colored by Severity)
-            const isHigh = issue.severity === 'High';
-            const isMod = issue.severity === 'Moderate';
-            
-            // Header Bg
-            doc.setFillColor(isHigh ? 254 : isMod ? 255 : 239, isHigh ? 242 : isMod ? 247 : 246, isHigh ? 242 : isMod ? 237 : 255);
-            doc.roundedRect(margin, yPos, pageWidth - (margin*2), 9, 1, 1, 'F');
+            // Define Severity Color
+            const sevColor = issue.severity === 'High' ? colors.red600 : issue.severity === 'Moderate' ? colors.orange500 : colors.blue600;
 
-            // Header Text
-            doc.setTextColor(30, 41, 59);
-            doc.setFontSize(10);
+            // 1. Draw Card Background
+            setFill(colors.white);
+            setDraw(colors.slate200);
+            doc.roundedRect(margin, yPos, contentWidth, cardHeight, 2, 2, 'FD');
+
+            // 2. Draw Left Color Strip
+            setFill(sevColor);
+            // Manually drawing a path for rounded left corners clipped? 
+            // Simpler: Just a rect that is slightly offset or just a rect inside
+            doc.rect(margin, yPos, 2, cardHeight, 'F'); // 2mm strip
+
+            // 3. Card Header (Index & Title)
+            const contentX = margin + 8;
+            let cardY = yPos + 10;
+            
+            // Index Circle
+            setFill(sevColor);
+            doc.circle(contentX + 3, cardY - 2, 4, 'F');
+            setText(colors.white);
+            doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
-            doc.text(`#${index + 1}  ${issue.category}`, margin + 4, yPos + 6);
+            doc.text(`${index + 1}`, contentX + 3, cardY - 1, { align: 'center' });
+
+            // Title
+            setText(colors.slate900);
+            doc.setFontSize(11);
+            doc.text(issue.category.toUpperCase(), contentX + 12, cardY);
             
-            // Severity Label (Right aligned)
-            const sevColor = isHigh ? [220, 38, 38] : isMod ? [234, 88, 12] : [37, 99, 235];
-            doc.setTextColor(sevColor[0], sevColor[1], sevColor[2]);
-            doc.text(issue.severity.toUpperCase(), pageWidth - margin - 50, yPos + 6);
+            // Severity Badge (Top Right of Card)
+            doc.setFontSize(8);
+            setText(sevColor);
+            doc.text(issue.severity.toUpperCase(), margin + contentWidth - 10, cardY, { align: 'right' });
+
+            // 4. Content Columns (Observation vs Cause)
+            cardY += 12;
+            const colWidth = (contentWidth / 2) - 12;
             
-            // Urgency
-            doc.setTextColor(100);
-            doc.setFont("helvetica", "normal");
+            // Col 1 Title
+            doc.setFontSize(7);
+            setText(colors.slate400);
+            doc.text("OBSERVATION", contentX, cardY);
+            
+            // Col 2 Title
+            const col2X = contentX + colWidth + 5;
+            doc.text("LIKELY CAUSE", col2X, cardY);
+
+            cardY += 5;
             doc.setFontSize(9);
-            doc.text(issue.urgency, pageWidth - margin - 4, yPos + 6, { align: 'right' });
+            setText(colors.slate600);
+            doc.setFont("helvetica", "normal");
 
-            yPos += 14;
-
-            // Content Columns
-            const colWidth = (pageWidth - (margin * 2) - 10) / 2;
+            // Text Wrap
+            const obsLines = doc.splitTextToSize(issue.visualDescription, colWidth);
+            const causeLines = doc.splitTextToSize(issue.possibleCause, colWidth);
             
-            // Col 1: Observation
+            doc.text(obsLines, contentX, cardY);
+            doc.text(causeLines, col2X, cardY);
+
+            // Calculate max height of this section
+            const rowHeight = Math.max(obsLines.length, causeLines.length) * 4;
+            cardY += rowHeight + 8;
+
+            // 5. Remediation Box (Bottom of Card)
+            setFill(colors.slate50);
+            setDraw(colors.slate200);
+            // Draw box relative to bottom of card content
+            const recBoxY = cardY;
+            const recBoxWidth = contentWidth - 16;
+            
+            // Rec Header
+            doc.setFontSize(7);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(71, 85, 105);
+            setText(colors.blue600);
+            doc.text("REMEDIATION STRATEGY", contentX, recBoxY);
+            
+            // Rec Text
             doc.setFontSize(9);
-            doc.text("Observation", margin + 2, yPos);
-            
             doc.setFont("helvetica", "normal");
-            doc.setTextColor(51, 65, 85);
-            const obsText = doc.splitTextToSize(issue.visualDescription, colWidth);
-            doc.text(obsText, margin + 2, yPos + 5);
+            setText(colors.slate800);
+            const recLines = doc.splitTextToSize(issue.recommendation, recBoxWidth);
+            doc.text(recLines, contentX, recBoxY + 5);
 
-            // Col 2: Cause
-            const col2X = margin + colWidth + 10;
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(71, 85, 105);
-            doc.text("Likely Cause", col2X, yPos);
-
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(51, 65, 85);
-            const causeText = doc.splitTextToSize(issue.possibleCause, colWidth);
-            doc.text(causeText, col2X, yPos + 5);
-
-            // Calculate height of this row
-            const rowHeight = Math.max(obsText.length, causeText.length) * 4 + 10;
-            yPos += rowHeight;
-
-            // Remediation Box
-            doc.setDrawColor(219, 234, 254); // Blue 100
-            doc.setFillColor(239, 246, 255); // Blue 50
-            doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 16, 1, 1, 'FD'); // Fill and Draw
-            
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(37, 99, 235); // Blue 600
-            doc.text("Remediation Strategy:", margin + 3, yPos + 6);
-
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor(30, 41, 59);
-            // We only show one line or wrapped line to keep it compact
-            const recText = doc.splitTextToSize(issue.recommendation, pageWidth - (margin*2) - 6);
-            doc.text(recText, margin + 3, yPos + 11);
-            
-            // Dynamic height adjustment for recommendation box if text is long
-            const recBoxHeight = (recText.length * 4) + 10;
-            // Redraw box if needed (simplified approach: just increment Y based on text)
-            
-            yPos += recBoxHeight + 8; // Margin bottom
+            // Update Y for next item
+            yPos += cardHeight + 8; // 8mm gap between cards
         });
 
-        // --- SECTION 3: FOOTER CTA ---
-        if (yPos > pageHeight - 60) {
+        // --- SECTION 3: FINAL CALL TO ACTION ---
+        
+        // Check page break for footer
+        if (yPos + 40 > pageHeight - 20) {
             doc.addPage();
             yPos = drawHeader();
+        } else {
+            yPos += 10;
         }
 
-        yPos += 5;
-        // Dark CTA Bar
-        doc.setFillColor(15, 23, 42); // Slate 900
-        doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 35, 2, 2, 'F');
+        // CTA Box
+        setFill(colors.slate900);
+        doc.roundedRect(margin, yPos, contentWidth, 35, 2, 2, 'F');
         
-        doc.setTextColor(255, 255, 255);
+        // Text
+        setText(colors.white);
+        doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Finalize Your Inspection", margin + 10, yPos + 12);
+        doc.text("NEXT STEP: PROFESSIONAL INSPECTION", margin + 10, yPos + 12);
         
-        doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(203, 213, 225); // Slate 300
-        doc.text("This report is a preliminary AI scan. For insurance purposes, a certified inspection is required.", margin + 10, yPos + 22);
+        setText(colors.slate400);
+        doc.setFont("helvetica", "normal");
+        doc.text("This AI report is preliminary. Book a certified inspector for insurance compliance.", margin + 10, yPos + 22);
 
-        // Button Appearance
-        doc.setFillColor(37, 99, 235); // Blue 600
-        doc.roundedRect(pageWidth - margin - 60, yPos + 8, 50, 18, 2, 2, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text("Book Inspector", pageWidth - margin - 35, yPos + 20, { align: 'center' });
+        // Button Visual
+        setFill(colors.blue600);
+        const btnWidth = 50;
+        const btnX = margin + contentWidth - btnWidth - 10;
+        const btnY = yPos + 8;
+        doc.roundedRect(btnX, btnY, btnWidth, 18, 1, 1, 'F');
         
-        // Link Overlay
-        doc.link(pageWidth - margin - 60, yPos + 8, 50, 18, { url: "https://calendly.com/" });
+        setText(colors.white);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text("BOOK NOW", btnX + (btnWidth/2), btnY + 11, { align: 'center' });
+        
+        // Clickable Link
+        doc.link(btnX, btnY, btnWidth, 18, { url: "https://calendly.com/" });
 
-        // --- GLOBAL FOOTERS (Page Numbers) ---
+
+        // --- PAGE NUMBERS & FOOTER ---
         const pageCount = doc.getNumberOfPages();
         for(let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
             
-            // Separator
-            doc.setDrawColor(226, 232, 240);
+            // Divider
+            setDraw(colors.slate200);
             doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
-
-            // Disclaimer Tiny
-            doc.setFontSize(7);
-            doc.setTextColor(148, 163, 184);
-            doc.text("AusBuild Inspect AI - Preliminary Visual Report - Not a Legal Document", margin, pageHeight - 8);
             
-            // Page Number
+            // Text
+            doc.setFontSize(7);
+            setText(colors.slate400);
+            doc.text("AusBuild Inspect AI - Preliminary Visual Analysis Report", margin, pageHeight - 8);
+            
             doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
         }
 
