@@ -100,7 +100,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
     <div 
       className={`
         relative group w-full 
-        min-h-[300px] sm:min-h-[420px] /* Compact height on mobile */
+        min-h-[280px] sm:min-h-[420px] /* More compact on mobile */
         rounded-[1.5rem] sm:rounded-[2.5rem]
         shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]
         p-[2px] overflow-hidden bg-slate-100
@@ -135,7 +135,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                 {/* 3D Icon Section */}
                 {!showUrlInput && (
                     <div 
-                    className={`relative w-16 h-16 sm:w-24 sm:h-24 mb-4 sm:mb-8 transition-transform duration-500 ease-out ${isLoading ? 'scale-110' : 'group-hover:scale-110 group-hover:-translate-y-2'} cursor-pointer`} 
+                    className={`relative w-14 h-14 sm:w-24 sm:h-24 mb-4 sm:mb-8 transition-transform duration-500 ease-out ${isLoading ? 'scale-110' : 'group-hover:scale-110 group-hover:-translate-y-2'} cursor-pointer`} 
                     onClick={() => inputRef.current?.click()}
                     >
                         {isLoading ? (
@@ -190,32 +190,32 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                     </div>
                 ) : (
                     <>
-                        <h3 className="text-xl sm:text-3xl font-bold text-slate-900 mb-2 sm:mb-3 tracking-tight drop-shadow-sm">
+                        <h3 className="text-lg sm:text-3xl font-bold text-slate-900 mb-1.5 sm:mb-3 tracking-tight drop-shadow-sm">
                             {isLoading ? 'Analyzing...' : 'Start Scan'}
                         </h3>
-                        <p className="text-slate-500 text-xs sm:text-base mb-6 sm:mb-10 font-medium max-w-[240px] sm:max-w-[280px] mx-auto leading-relaxed">
+                        <p className="text-slate-500 text-[11px] sm:text-base mb-5 sm:mb-10 font-medium max-w-[220px] sm:max-w-[280px] mx-auto leading-relaxed">
                             Drag & drop or select a photo to identify defects instantly.
                         </p>
 
-                        {/* --- SMART COMPACT MOBILE ROW LAYOUT --- */}
-                        <div className="flex flex-row items-stretch gap-1.5 sm:gap-3 w-full justify-center max-w-md mx-auto h-[50px] sm:h-[58px]">
+                        {/* --- COMPACT PRO MOBILE ROW LAYOUT --- */}
+                        <div className="flex flex-row items-stretch gap-1.5 sm:gap-3 w-full justify-center max-w-[90%] sm:max-w-md mx-auto h-[46px] sm:h-[58px]">
                             
                             {/* 1. Main Upload Button (Dominant) */}
                             <button 
                                 onClick={() => inputRef.current?.click()}
                                 disabled={isLoading}
                                 className="
-                                flex-1
+                                flex-[1.5]
                                 group/btn relative overflow-hidden
                                 bg-gradient-to-br from-blue-600 to-indigo-600
                                 hover:from-blue-500 hover:to-indigo-500
                                 text-white px-3 sm:px-6 
                                 rounded-xl sm:rounded-2xl
-                                text-sm sm:text-base font-bold
-                                shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)]
-                                hover:shadow-[0_20px_30px_-5px_rgba(37,99,235,0.5)]
+                                text-xs sm:text-base font-bold
+                                shadow-[0_8px_15px_-5px_rgba(37,99,235,0.4)]
+                                hover:shadow-[0_15px_25px_-5px_rgba(37,99,235,0.5)]
                                 transition-all duration-300 ease-out
-                                transform hover:-translate-y-1 active:scale-[0.98] active:translate-y-0
+                                transform hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0
                                 flex items-center justify-center gap-2
                                 "
                             >
@@ -223,7 +223,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 <span className="relative z-10 whitespace-nowrap">
                                     Upload<span className="inline"> Photo</span>
                                 </span>
-                                <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-in-out z-0"></div>
                             </button>
 
                             {/* 2. Camera Button (Compact Square) */}
@@ -231,7 +230,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 onClick={() => cameraInputRef.current?.click()}
                                 disabled={isLoading}
                                 className="
-                                flex-shrink-0 w-[50px] sm:w-[58px]
+                                flex-shrink-0 w-[46px] sm:w-[58px]
                                 bg-white
                                 border border-slate-200
                                 rounded-xl sm:rounded-2xl
@@ -240,7 +239,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 shadow-sm hover:shadow-md
                                 hover:border-blue-200
                                 transition-all duration-300
-                                transform hover:-translate-y-1 active:scale-[0.95]
+                                transform hover:-translate-y-0.5 active:scale-[0.95]
                                 "
                                 aria-label="Take Photo"
                             >
@@ -252,7 +251,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 onClick={() => setShowUrlInput(true)}
                                 disabled={isLoading}
                                 className="
-                                flex-shrink-0 w-[50px] sm:w-[58px]
+                                flex-shrink-0 w-[46px] sm:w-[58px]
                                 bg-white
                                 border border-slate-200
                                 rounded-xl sm:rounded-2xl
@@ -261,7 +260,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 shadow-sm hover:shadow-md
                                 hover:border-blue-200
                                 transition-all duration-300
-                                transform hover:-translate-y-1 active:scale-[0.95]
+                                transform hover:-translate-y-0.5 active:scale-[0.95]
                                 "
                                 aria-label="Paste Link"
                             >
@@ -270,7 +269,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                         </div>
 
                         {/* Footer Text */}
-                        <div className="flex items-center gap-3 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-auto pt-4 sm:pt-10 opacity-70">
+                        <div className="flex items-center gap-3 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-auto pt-3 sm:pt-10 opacity-60">
                             <span>JPG</span>
                             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                             <span>PNG</span>
