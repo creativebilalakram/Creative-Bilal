@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Upload, Camera, Link as LinkIcon, Loader2, Image as ImageIcon, ArrowRight, X } from 'lucide-react';
+import { Upload, Camera, Link as LinkIcon, Loader2, Image as ImageIcon, ArrowRight, X, ScanLine, Aperture } from 'lucide-react';
 
 interface ImageUploadProps {
   onImageSelected: (file: File) => void;
@@ -102,205 +102,219 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
         relative group w-full 
         min-h-[280px] sm:min-h-[420px]
         rounded-[1.5rem] sm:rounded-[2.5rem]
-        shadow-[0_20px_60px_-12px_rgba(0,0,0,0.12),0_8px_24px_-8px_rgba(0,0,0,0.06)] 
-        p-[2px] /* 2px padding for sharp border */
-        overflow-hidden bg-slate-100
-        flex flex-col 
+        
+        /* SHARP DROP SHADOW ONLY - Deep & Architectural */
+        shadow-[0_20px_60px_-15px_rgba(15,23,42,0.2)]
+        
+        bg-transparent
+        
         transition-all duration-500 ease-out
-        ${dragActive ? 'scale-[1.01]' : ''}
+        
+        ${dragActive ? 'scale-[0.995]' : ''}
       `}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
     >
-        {/* --- SHORT SNAKE BORDER ANIMATION (REVERTED) --- */}
-        <div className="absolute inset-0 bg-slate-200/50" />
-        
-        {/* Default Grey Snake (Short Tail) */}
-        <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_90%,#94a3b8_95%,#e2e8f0_100%)] opacity-70 group-hover:opacity-0 transition-opacity duration-500" />
-        
-        {/* Hover Blue Snake (Short Tail) */}
-        <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_92%,#3b82f6_98%,#ffffff_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Drag Active State */}
-        {dragActive && (
-             <div className="absolute inset-[-100%] animate-[spin_1.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#60a5fa_50%,#3b82f6_100%)] opacity-100 z-10" />
-        )}
+        {/* --- 1. ADAPTIVE SNAKE BORDER LAYER --- */}
+        <div className="absolute inset-0 rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden z-0">
+             
+             {/* A. Professional Silver Snake (DEFAULT) */}
+             {/* Slow spin, subtle contrast, looks engineered */}
+             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] 
+                 bg-[conic-gradient(from_0deg,transparent_0_340deg,#cbd5e1_350deg,#64748b_360deg)]
+                 animate-[spin_4s_linear_infinite]
+                 opacity-100 group-hover:opacity-0 transition-opacity duration-500
+             "></div>
 
-        {/* --- INNER CARD CONTENT WITH KILLER DEPTH --- */}
-        <div className="relative flex-1 w-full h-full rounded-[1.4rem] sm:rounded-[2.4rem] flex flex-col justify-center overflow-hidden z-20 bg-[#fafafa]">
+             {/* B. Electric Blue Snake (HOVER) */}
+             {/* Fast spin, high energy, activates on interaction */}
+             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] 
+                 bg-[conic-gradient(from_0deg,transparent_0_340deg,#60a5fa_350deg,#2563eb_360deg)]
+                 animate-[spin_2s_linear_infinite]
+                 opacity-0 group-hover:opacity-100 transition-opacity duration-500
+             "></div>
+        </div>
+
+        {/* --- 2. KILLER BACKGROUND FACE --- */}
+        {/* Inset by 1.5px to reveal snake border sharply */}
+        <div className="absolute inset-[1.5px] rounded-[calc(1.5rem-1.5px)] sm:rounded-[calc(2.5rem-1.5px)] z-10 
+            overflow-hidden bg-[#f8fafc]
+        ">
+            {/* Base: Platinum Mesh Gradient */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-slate-50 to-slate-100 opacity-100"></div>
             
-            {/* 1. Technical Grid Texture */}
-            <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-[0.4] pointer-events-none"></div>
+            {/* Texture: Micro-Noise (Adds physical material feel) */}
+            <div className="absolute inset-0 opacity-[0.03] mix-blend-multiply" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
-            {/* 2. Deep Inset Shadow (The "Tray" Effect) */}
-            <div className="absolute inset-0 shadow-[inset_0_2px_20px_rgba(0,0,0,0.02),inset_0_10px_40px_-10px_rgba(0,0,0,0.05)] rounded-[1.4rem] sm:rounded-[2.4rem] pointer-events-none"></div>
+             {/* Pattern: Technical Grid (Very Subtle, Fades out at edges) */}
+             <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)] pointer-events-none"></div>
 
-            {/* 3. Top Highlight (Ambient Light) */}
-            <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-white to-transparent opacity-80 pointer-events-none"></div>
+            {/* Reflection: Top Glass Bevel */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-80"></div>
+            <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-slate-300 to-transparent opacity-50"></div>
+        </div>
 
-            {/* 4. Bottom Shadow/Depth */}
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-slate-100/80 to-transparent pointer-events-none"></div>
+        {/* --- 3. CONTENT LAYER --- */}
+        <input ref={inputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" disabled={isLoading} />
+        <input ref={cameraInputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" capture="environment" disabled={isLoading} />
 
-            {/* Soft Inner Glow on Hover */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+        <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-4 py-8 sm:py-12 flex-1">
+            
+            {/* Icon Section */}
+            {!showUrlInput && (
+                <div 
+                className={`
+                    relative w-16 h-16 sm:w-24 sm:h-24 mb-6 sm:mb-10 
+                    transition-all duration-500 ease-out 
+                    ${isLoading ? 'scale-110' : 'group-hover:scale-105 group-hover:-translate-y-2'} 
+                    cursor-pointer
+                `} 
+                onClick={() => inputRef.current?.click()}
+                >
+                    {isLoading ? (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                            <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600 animate-spin relative z-10 drop-shadow-md" />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Icon Shadow */}
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-slate-900/10 rounded-[100%] blur-[4px] group-hover:w-20 group-hover:blur-[6px] transition-all duration-500"></div>
 
-            {/* --- CONTENT LAYER --- */}
-            <input ref={inputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" disabled={isLoading} />
-            <input ref={cameraInputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" capture="environment" disabled={isLoading} />
-
-            <div className="flex flex-col items-center justify-center text-center w-full relative z-30 px-4 py-6 sm:px-6 sm:py-8 h-full">
-                
-                {/* 3D Icon Section */}
-                {!showUrlInput && (
-                    <div 
-                    className={`relative w-14 h-14 sm:w-24 sm:h-24 mb-4 sm:mb-8 transition-transform duration-500 ease-out ${isLoading ? 'scale-110' : 'group-hover:scale-110 group-hover:-translate-y-2'} cursor-pointer`} 
-                    onClick={() => inputRef.current?.click()}
-                    >
-                        {isLoading ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
-                                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
-                                <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600 animate-spin relative z-10 drop-shadow-md" />
+                            {/* Pro Icon Container */}
+                            <div className="relative w-full h-full flex items-center justify-center bg-white rounded-[1.2rem] sm:rounded-[2rem] shadow-[0_10px_30px_-10px_rgba(15,23,42,0.1),inset_0_1px_0_rgba(255,255,255,1),0_0_0_1px_rgba(226,232,240,1)] group-hover:shadow-[0_20px_40px_-12px_rgba(37,99,235,0.25),0_0_0_1px_rgba(59,130,246,0.3)] transition-all duration-500">
+                                <ScanLine className="absolute inset-0 w-full h-full text-slate-100 p-3" strokeWidth={1} />
+                                <Upload className="w-7 h-7 sm:w-10 sm:h-10 text-slate-700 group-hover:text-blue-600 transition-colors relative z-10" />
                             </div>
-                        ) : (
-                            <>
-                                {/* Floating Platform Shadow */}
-                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-slate-300/50 rounded-[100%] blur-sm group-hover:w-12 group-hover:blur-md transition-all duration-500"></div>
+                        </>
+                    )}
+                </div>
+            )}
 
-                                {/* Icon Container with Glassmorphism */}
-                                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-tr from-white to-slate-50 rounded-2xl sm:rounded-[2rem] shadow-[0_8px_16px_-4px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.8)] border border-white">
-                                    <div className="absolute inset-0 bg-blue-50/30 rounded-2xl sm:rounded-[2rem]"></div>
-                                    <Upload className="w-6 h-6 sm:w-10 sm:h-10 text-blue-600 drop-shadow-md relative z-10" />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* Content Area */}
-                {showUrlInput ? (
-                    <div className="w-full max-w-sm animate-fade-in py-4 flex flex-col items-center">
-                        <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 sm:mb-6">Paste Image Link</h3>
-                        <form onSubmit={handleUrlSubmit} className="relative flex items-center w-full mb-4 group/input">
-                            <LinkIcon className="absolute left-4 w-5 h-5 text-slate-400 group-focus-within/input:text-blue-500 transition-colors" />
-                            <input 
-                                ref={urlInputRef}
-                                type="url"
-                                value={urlValue}
-                                onChange={(e) => setUrlValue(e.target.value)}
-                                placeholder="https://..."
-                                className="w-full pl-12 pr-12 py-3 sm:py-4 bg-white/80 border border-slate-200 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)]"
-                                disabled={isProcessingUrl}
-                            />
-                            <button 
-                                type="submit"
-                                disabled={isProcessingUrl}
-                                className="absolute right-2.5 p-1.5 sm:p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:shadow-none transform active:scale-90"
-                            >
-                                {isProcessingUrl ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                            </button>
-                        </form>
+            {/* Main Text & Buttons */}
+            {showUrlInput ? (
+                <div className="w-full max-w-sm animate-fade-in py-4 flex flex-col items-center">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-4 sm:mb-6">Paste Image Link</h3>
+                    <form onSubmit={handleUrlSubmit} className="relative flex items-center w-full mb-4 group/input">
+                        <LinkIcon className="absolute left-4 w-5 h-5 text-slate-400 group-focus-within/input:text-blue-500 transition-colors" />
+                        <input 
+                            ref={urlInputRef}
+                            type="url"
+                            value={urlValue}
+                            onChange={(e) => setUrlValue(e.target.value)}
+                            placeholder="https://..."
+                            className="w-full pl-12 pr-12 py-3 sm:py-4 bg-white border border-slate-200 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
+                            disabled={isProcessingUrl}
+                        />
                         <button 
-                            onClick={() => { setShowUrlInput(false); setUrlValue(''); }}
-                            className="text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1.5 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                            type="submit"
+                            disabled={isProcessingUrl}
+                            className="absolute right-2.5 p-1.5 sm:p-2 bg-slate-900 text-white rounded-xl hover:bg-blue-600 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:shadow-none transform active:scale-90"
                         >
-                            <X className="w-3.5 h-3.5" /> Cancel
+                            {isProcessingUrl ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                        </button>
+                    </form>
+                    <button 
+                        onClick={() => { setShowUrlInput(false); setUrlValue(''); }}
+                        className="text-xs font-bold text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1.5 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                        <X className="w-3.5 h-3.5" /> Cancel
+                    </button>
+                </div>
+            ) : (
+                <>
+                    <h3 className="text-xl sm:text-3xl font-black text-slate-900 mb-2 sm:mb-3 tracking-tight drop-shadow-sm">
+                        {isLoading ? 'Analyzing...' : 'Start Scan'}
+                    </h3>
+                    <p className="text-slate-500 text-xs sm:text-base mb-6 sm:mb-10 font-medium max-w-[240px] sm:max-w-[320px] mx-auto leading-relaxed text-center">
+                        Drag & drop or select a photo to identify defects instantly.
+                    </p>
+
+                    {/* --- PRO CONTROLS ROW --- */}
+                    <div className="flex flex-row items-stretch gap-2 sm:gap-3 w-full justify-center max-w-[95%] sm:max-w-md mx-auto h-[50px] sm:h-[60px]">
+                        
+                        {/* 1. Main Upload Button - SHARP UPDATE */}
+                        <button 
+                            onClick={() => inputRef.current?.click()}
+                            disabled={isLoading}
+                            className="
+                            flex-[1.5]
+                            group/btn relative overflow-hidden
+                            bg-slate-900 hover:bg-blue-600
+                            text-white px-4 sm:px-6 
+                            rounded-xl sm:rounded-2xl
+                            text-sm sm:text-base font-bold
+                            
+                            /* SHARP EDGES - No Blur */
+                            border border-slate-700 hover:border-blue-500
+                            /* Removed all blurry shadows */
+                            shadow-none
+                            
+                            transition-all duration-300 ease-out
+                            transform hover:-translate-y-0.5 active:scale-[0.98]
+                            flex items-center justify-center gap-2.5
+                            "
+                        >
+                            {/* Subtle internal shine */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+                            
+                            <Aperture className="w-4 h-4 sm:w-5 sm:h-5 text-slate-300 group-hover/btn:text-white transition-colors" />
+                            <span className="relative z-10 whitespace-nowrap tracking-wide">
+                                Upload Photo
+                            </span>
+                        </button>
+
+                        {/* 2. Camera Button - SHARP UPDATE */}
+                        <button 
+                            onClick={() => cameraInputRef.current?.click()}
+                            disabled={isLoading}
+                            className="
+                            flex-shrink-0 w-[50px] sm:w-[60px]
+                            bg-white
+                            border border-slate-200
+                            rounded-xl sm:rounded-2xl
+                            flex items-center justify-center
+                            text-slate-600 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50
+                            shadow-none
+                            transition-all duration-300
+                            "
+                            aria-label="Take Photo"
+                        >
+                            <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+                        
+                        {/* 3. Link Button - SHARP UPDATE */}
+                        <button 
+                            onClick={() => setShowUrlInput(true)}
+                            disabled={isLoading}
+                            className="
+                            flex-shrink-0 w-[50px] sm:w-[60px]
+                            bg-white
+                            border border-slate-200
+                            rounded-xl sm:rounded-2xl
+                            flex items-center justify-center
+                            text-slate-600 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50
+                            shadow-none
+                            transition-all duration-300
+                            "
+                            aria-label="Paste Link"
+                        >
+                            <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
                     </div>
-                ) : (
-                    <>
-                        <h3 className="text-lg sm:text-3xl font-black text-slate-800 mb-1.5 sm:mb-3 tracking-tight drop-shadow-sm">
-                            {isLoading ? 'Analyzing...' : 'Start Scan'}
-                        </h3>
-                        <p className="text-slate-500 text-[11px] sm:text-base mb-5 sm:mb-10 font-medium max-w-[220px] sm:max-w-[280px] mx-auto leading-relaxed">
-                            Drag & drop or select a photo to identify defects instantly.
-                        </p>
 
-                        {/* --- COMPACT PRO MOBILE ROW LAYOUT --- */}
-                        <div className="flex flex-row items-stretch gap-1.5 sm:gap-3 w-full justify-center max-w-[90%] sm:max-w-md mx-auto h-[46px] sm:h-[58px]">
-                            
-                            {/* 1. Main Upload Button (Dominant) */}
-                            <button 
-                                onClick={() => inputRef.current?.click()}
-                                disabled={isLoading}
-                                className="
-                                flex-[1.5]
-                                group/btn relative overflow-hidden
-                                bg-gradient-to-br from-blue-600 to-indigo-600
-                                hover:from-blue-500 hover:to-indigo-500
-                                text-white px-3 sm:px-6 
-                                rounded-xl sm:rounded-2xl
-                                text-xs sm:text-base font-bold
-                                shadow-[0_8px_20px_-5px_rgba(37,99,235,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]
-                                hover:shadow-[0_15px_25px_-5px_rgba(37,99,235,0.5)]
-                                transition-all duration-300 ease-out
-                                transform hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0
-                                flex items-center justify-center gap-2
-                                "
-                            >
-                                <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-100" />
-                                <span className="relative z-10 whitespace-nowrap">
-                                    Upload<span className="inline"> Photo</span>
-                                </span>
-                            </button>
-
-                            {/* 2. Camera Button (Compact Square) */}
-                            <button 
-                                onClick={() => cameraInputRef.current?.click()}
-                                disabled={isLoading}
-                                className="
-                                flex-shrink-0 w-[46px] sm:w-[58px]
-                                bg-white
-                                border border-slate-200
-                                rounded-xl sm:rounded-2xl
-                                flex items-center justify-center
-                                text-slate-600 hover:text-blue-600
-                                shadow-[0_2px_5px_rgba(0,0,0,0.05)]
-                                hover:shadow-md
-                                hover:border-blue-200
-                                transition-all duration-300
-                                transform hover:-translate-y-0.5 active:scale-[0.95]
-                                "
-                                aria-label="Take Photo"
-                            >
-                                <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                            </button>
-                            
-                            {/* 3. Link Button (Compact Square) */}
-                            <button 
-                                onClick={() => setShowUrlInput(true)}
-                                disabled={isLoading}
-                                className="
-                                flex-shrink-0 w-[46px] sm:w-[58px]
-                                bg-white
-                                border border-slate-200
-                                rounded-xl sm:rounded-2xl
-                                flex items-center justify-center
-                                text-slate-600 hover:text-blue-600
-                                shadow-[0_2px_5px_rgba(0,0,0,0.05)]
-                                hover:shadow-md
-                                hover:border-blue-200
-                                transition-all duration-300
-                                transform hover:-translate-y-0.5 active:scale-[0.95]
-                                "
-                                aria-label="Paste Link"
-                            >
-                                <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                            </button>
-                        </div>
-
-                        {/* Footer Text */}
-                        <div className="flex items-center gap-3 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-auto pt-3 sm:pt-10 opacity-60">
-                            <span>JPG</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                            <span>PNG</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                            <span>Secure</span>
-                        </div>
-                    </>
-                )}
-            </div>
+                    {/* Footer Text */}
+                    <div className="flex items-center gap-3 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-auto pt-6 sm:pt-10 opacity-60">
+                        <span>JPG</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                        <span>PNG</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                        <span>Secure</span>
+                    </div>
+                </>
+            )}
         </div>
     </div>
   );
