@@ -8,11 +8,11 @@ interface AnalysisReportProps {
   data: AnalysisResult;
   onReset: () => void;
   previewUrl: string | null;
+  base64Image: string | null;
 }
 
-export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, previewUrl }) => {
-  // FEATURE FIX: Initialize state DIRECTLY from localStorage.
-  // This ensures the form is hidden immediately on the first render if data exists.
+export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, previewUrl, base64Image }) => {
+  // Check if user is already unlocked from localStorage
   const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
         return !!localStorage.getItem('ausbuild_user_profile');
@@ -46,8 +46,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
         const doc = new jsPDF();
         let yPos = 20;
 
+        // Branding
         doc.setFontSize(22);
-        doc.setTextColor(37, 99, 235);
+        doc.setTextColor(37, 99, 235); // Blue-600
         doc.text("AusBuild Inspect AI", 20, yPos);
         
         yPos += 10;
@@ -59,23 +60,52 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
         yPos += 15;
         doc.setDrawColor(200);
         doc.line(20, yPos - 5, 190, yPos - 5);
-        
-        doc.setFontSize(14);
-        doc.setTextColor(0);
-        doc.text("Inspection Summary", 20, yPos);
-        yPos += 7;
-        
-        doc.setFontSize(10);
-        doc.setTextColor(50);
-        const splitSummary = doc.splitTextToSize(data.summary, 170);
-        doc.text(splitSummary, 20, yPos);
-        yPos += splitSummary.length * 5 + 5;
 
+        // Add Image
+        if (base64Image) {
+            try {
+                // Determine aspect ratio to fit image nicely
+                const imgProps = doc.getImageProperties(`data:image/jpeg;base64,${base64Image}`);
+                const imgWidth = 80;
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                doc.addImage(`data:image/jpeg;base64,${base64Image}`, 'JPEG', 20, yPos, imgWidth, imgHeight);
+                
+                // Add Summary side-by-side
+                doc.setFontSize(14);
+                doc.setTextColor(0);
+                doc.text("Inspection Summary", 110, yPos + 10);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(50);
+                const splitSummary = doc.splitTextToSize(data.summary, 80);
+                doc.text(splitSummary, 110, yPos + 20);
+
+                yPos += Math.max(imgHeight, splitSummary.length * 5 + 20) + 15;
+            } catch (err) {
+                console.warn("Could not add image to PDF", err);
+                yPos += 10;
+            }
+        } else {
+             // Fallback if no image
+             doc.setFontSize(14);
+             doc.setTextColor(0);
+             doc.text("Inspection Summary", 20, yPos);
+             yPos += 7;
+             
+             doc.setFontSize(10);
+             doc.setTextColor(50);
+             const splitSummary = doc.splitTextToSize(data.summary, 170);
+             doc.text(splitSummary, 20, yPos);
+             yPos += splitSummary.length * 5 + 15;
+        }
+
+        // Severity Score
         doc.setFontSize(11);
         doc.setTextColor(0);
         doc.text(`Calculated Severity Score: ${data.severityScore}/100`, 20, yPos);
         yPos += 10;
 
+        // Issues
         doc.setFontSize(14);
         doc.text("Detected Issues", 20, yPos);
         yPos += 10;
@@ -93,6 +123,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
 
             doc.setFontSize(10);
             doc.setTextColor(80);
+            
             const desc = `Observation: ${issue.visualDescription}`;
             const splitDesc = doc.splitTextToSize(desc, 160);
             doc.text(splitDesc, 25, yPos);
@@ -109,6 +140,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
             yPos += splitRec.length * 5 + 5;
         });
 
+        // Footer / Disclaimer
         yPos += 10;
         if (yPos > 260) {
             doc.addPage();
@@ -165,7 +197,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
             </div>
          </div>
 
-         {/* Severity Gauge Card - UPDATED */}
+         {/* Severity Gauge Card */}
          <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl text-white flex flex-col items-center justify-center relative overflow-hidden">
              {/* Background Effects */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-blue-500/5 blur-3xl pointer-events-none"></div>
@@ -212,9 +244,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
 
                 {/* Center Value */}
                 <div className="absolute bottom-0 left-0 w-full text-center transform translate-y-1">
-                     <div className="text-4xl sm:text-5xl font-black tracking-tighter text-white drop-shadow-2xl">
+                     <div className="text-5xl font-black tracking-tighter text-white drop-shadow-2xl">
                         {data.severityScore}
-                        <span className="text-xs sm:text-sm font-medium text-slate-500 align-top ml-1 relative top-1">/100</span>
+                        <span className="text-xs font-medium text-slate-500 align-top ml-1 relative top-1">/100</span>
                      </div>
                 </div>
              </div>
@@ -241,7 +273,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
         <div className={`transition-all duration-700 ${!isUnlocked ? 'select-none opacity-80 h-[600px] overflow-hidden' : 'opacity-100'}`}>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 px-1 gap-4">
-             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center">
+             <h2 className="text-2xl font-bold text-slate-900 flex items-center">
                <AlertOctagon className="w-6 h-6 mr-3 text-slate-400" />
                Detailed Defect Findings
              </h2>
@@ -250,7 +282,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                 <button 
                   onClick={generatePDF}
                   disabled={isGeneratingPdf}
-                  className="flex items-center space-x-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm no-print w-full sm:w-auto justify-center"
+                  className="flex items-center space-x-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm no-print"
                 >
                   {isGeneratingPdf ? <Activity className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   <span>Export Report</span>
@@ -289,7 +321,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                  </div>
 
                  {/* Issue Content */}
-                 <div className="p-5 sm:p-6 grid md:grid-cols-12 gap-6">
+                 <div className="p-6 grid md:grid-cols-12 gap-6">
                      <div className="md:col-span-7 space-y-4">
                         <div>
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Observation</h4>
@@ -318,8 +350,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
 
           {/* Action Footer */}
           <div className="mt-12 grid md:grid-cols-2 gap-8 break-inside-avoid">
-             <div className="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-2xl">
-                <h3 className="font-bold text-lg sm:text-xl mb-6">Homeowner Checklist</h3>
+             <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-2xl">
+                <h3 className="font-bold text-xl mb-6">Homeowner Checklist</h3>
                 <ul className="space-y-4">
                   {data.nextSteps.map((step, idx) => (
                     <li key={idx} className="flex items-start">
@@ -332,12 +364,12 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                 </ul>
              </div>
 
-             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-2xl flex flex-col items-center justify-center text-center no-print relative overflow-hidden">
+             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl flex flex-col items-center justify-center text-center no-print relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <CheckCircle className="w-32 h-32" />
                 </div>
                 <div className="relative z-10">
-                    <h3 className="font-bold text-xl sm:text-2xl mb-2">Finalize Your Inspection</h3>
+                    <h3 className="font-bold text-2xl mb-2">Finalize Your Inspection</h3>
                     <p className="text-blue-100 text-sm mb-8 max-w-xs mx-auto">
                     This AI scan is an indicator. For legal compliance and insurance, book a certified physical inspection.
                     </p>
