@@ -200,7 +200,8 @@ const App: React.FC = () => {
         {!previewUrl ? (
           <Hero onImageSelected={handleImageSelected} isLoading={false} />
         ) : (
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:p-8 animate-fade-in pb-12">
+          /* PADDING UPDATE: px-3 (12px) for mobile */
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:p-8 animate-fade-in pb-12">
             <div className="space-y-8">
               
               {/* === PRO ANALYSIS INTERFACE === */}
@@ -208,7 +209,7 @@ const App: React.FC = () => {
                 
                 {/* Technical Header Bar */}
                 {loadingState.status !== 'success' && (
-                  <div className="bg-slate-900/95 backdrop-blur text-white px-6 py-4 flex items-center justify-between border-b border-slate-800 transition-all duration-500">
+                  <div className="bg-slate-900/95 backdrop-blur text-white px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-800 transition-all duration-500">
                     <div className="flex items-center space-x-4">
                       {loadingState.status === 'analyzing' ? (
                         <div className="flex items-center space-x-2">
@@ -234,7 +235,7 @@ const App: React.FC = () => {
                 <div className={`flex transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'flex-row h-28 items-stretch' : 'flex-col md:flex-row min-h-[500px]'}`}>
                     
                     {/* Left: Visual Sensor (Image) */}
-                    <div className={`relative bg-slate-950 overflow-hidden group flex items-center justify-center transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'w-28 md:w-36 flex-shrink-0' : 'w-full md:w-5/12'}`}>
+                    <div className={`relative bg-slate-950 overflow-hidden group flex items-center justify-center transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'w-24 sm:w-28 md:w-36 flex-shrink-0' : 'w-full md:w-5/12'}`}>
                          <img 
                            src={previewUrl} 
                            alt="Analyzed Target" 
@@ -253,20 +254,21 @@ const App: React.FC = () => {
                     </div>
                     
                     {/* Right: Intelligence Panel */}
-                    <div className={`flex flex-col justify-center relative transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'flex-1 p-4 md:px-8 bg-white/50' : 'w-full md:w-7/12 p-8 md:p-12 bg-white'}`}>
+                    {/* PADDING UPDATE: p-5 (20px) on mobile instead of p-8 */}
+                    <div className={`flex flex-col justify-center relative transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'flex-1 p-4 md:px-8 bg-white/50' : 'w-full md:w-7/12 p-5 md:p-12 bg-white'}`}>
                       
                       {loadingState.status === 'analyzing' && (
-                        <div className="space-y-10 animate-fade-in w-full max-w-md mx-auto">
+                        <div className="space-y-8 sm:space-y-10 animate-fade-in w-full max-w-md mx-auto">
                           <div>
-                            <h2 className="text-4xl font-bold text-slate-900 mb-3 tracking-tight">Processing Visuals</h2>
-                            <p className="text-slate-500 text-lg">Inspecting against Australian Building Standards.</p>
+                            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2 sm:mb-3 tracking-tight">Processing Visuals</h2>
+                            <p className="text-slate-500 text-base sm:text-lg">Inspecting against Australian Building Standards.</p>
                           </div>
 
                           {/* Tech Console */}
-                          <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 font-mono text-sm space-y-4 shadow-inner">
+                          <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 sm:p-5 font-mono text-sm space-y-4 shadow-inner">
                              <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                                 <span className="text-slate-400 text-xs uppercase tracking-wider">Protocol</span>
-                                <span className="text-blue-600 font-bold">STRUCTURAL_DIAGNOSTIC_V2</span>
+                                <span className="text-blue-600 font-bold text-xs sm:text-sm">STRUCTURAL_DIAGNOSTIC_V2</span>
                              </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-slate-400 text-xs uppercase tracking-wider">Status</span>
@@ -291,7 +293,7 @@ const App: React.FC = () => {
                       )}
 
                       {loadingState.status === 'error' && (
-                        <div className="bg-red-50/80 border border-red-100 rounded-2xl p-8 text-red-900 max-w-md mx-auto text-center backdrop-blur-sm">
+                        <div className="bg-red-50/80 border border-red-100 rounded-2xl p-6 sm:p-8 text-red-900 max-w-md mx-auto text-center backdrop-blur-sm">
                            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
                              <AlertTriangle className="w-7 h-7 text-red-600" />
                            </div>

@@ -175,9 +175,10 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in no-print">
          
          {/* Main Summary Card */}
-         <div className="lg:col-span-2 bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xl relative overflow-hidden group">
+         {/* PADDING UPDATE: p-4 for mobile */}
+         <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-8 border border-slate-200 shadow-xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <FileText className="w-32 h-32" />
+                <FileText className="w-24 h-24 sm:w-32 sm:h-32" />
             </div>
             <div className="relative z-10">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -189,7 +190,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                 </p>
                 <div className="mt-6 flex flex-wrap gap-2">
                     {data.topCategories.map((cat, i) => (
-                        <span key={i} className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-bold uppercase tracking-wide border border-slate-200 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">
+                        <span key={i} className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] sm:text-xs font-bold uppercase tracking-wide border border-slate-200 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors">
                            <Layers className="w-3 h-3 mr-1.5 text-slate-400 group-hover:text-blue-500" /> {cat}
                         </span>
                     ))}
@@ -198,7 +199,8 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
          </div>
 
          {/* Severity Gauge Card */}
-         <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 shadow-2xl text-white flex flex-col items-center justify-center relative overflow-hidden">
+         {/* PADDING UPDATE: p-4 for mobile */}
+         <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-800 shadow-2xl text-white flex flex-col items-center justify-center relative overflow-hidden">
              {/* Background Effects */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-blue-500/5 blur-3xl pointer-events-none"></div>
              
@@ -262,7 +264,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
       </div>
 
       {/* 2. Detailed Breakdown (Gated) */}
-      <div className="relative mt-12">
+      <div className="relative mt-8 sm:mt-12">
         
         {!isUnlocked && (
            <div className="absolute inset-0 z-20 backdrop-blur-[4px] bg-white/30 flex items-start justify-center pt-20 rounded-3xl no-print">
@@ -272,9 +274,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
 
         <div className={`transition-all duration-700 ${!isUnlocked ? 'select-none opacity-80 h-[600px] overflow-hidden' : 'opacity-100'}`}>
           
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 px-1 gap-4">
-             <h2 className="text-2xl font-bold text-slate-900 flex items-center">
-               <AlertOctagon className="w-6 h-6 mr-3 text-slate-400" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 px-1 gap-4">
+             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center">
+               <AlertOctagon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-slate-400" />
                Detailed Defect Findings
              </h2>
              
@@ -290,11 +292,12 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
              )}
           </div>
             
-          <div className="grid gap-6 break-inside-avoid">
+          <div className="grid gap-4 sm:gap-6 break-inside-avoid">
             {data.issues.map((issue, index) => (
               <div key={index} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group hover:shadow-md transition-shadow">
                  {/* Issue Header */}
-                 <div className="border-b border-slate-100 p-4 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                 {/* PADDING UPDATE: p-3 for mobile */}
+                 <div className="border-b border-slate-100 p-3 sm:p-4 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                      <div className="flex items-center">
                         <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mr-3 shrink-0 ${
                             issue.severity === 'High' ? 'bg-red-100 text-red-600' : issue.severity === 'Moderate' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
@@ -302,38 +305,39 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                             {index + 1}
                         </span>
                         <div className="min-w-0">
-                            <h3 className="font-bold text-slate-900 text-base truncate pr-2">{issue.category}</h3>
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate pr-2">{issue.category}</h3>
                             <span className="text-xs text-slate-500 block">Detected via Visual Analysis</span>
                         </div>
                      </div>
                      <div className="flex items-center flex-wrap gap-2 sm:space-x-3">
-                         <span className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide border whitespace-nowrap ${
+                         <span className={`px-2.5 py-1 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wide border whitespace-nowrap ${
                              issue.severity === 'High' ? 'bg-red-50 text-red-700 border-red-100' : 
                              issue.severity === 'Moderate' ? 'bg-orange-50 text-orange-700 border-orange-100' : 
                              'bg-yellow-50 text-yellow-700 border-yellow-100'
                          }`}>
                              {issue.severity} Severity
                          </span>
-                         <span className="px-2.5 py-1 bg-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wide rounded whitespace-nowrap">
+                         <span className="px-2.5 py-1 bg-slate-200 text-slate-600 text-[10px] sm:text-xs font-bold uppercase tracking-wide rounded whitespace-nowrap">
                              {issue.urgency}
                          </span>
                      </div>
                  </div>
 
                  {/* Issue Content */}
-                 <div className="p-6 grid md:grid-cols-12 gap-6">
+                 {/* PADDING UPDATE: p-4 for mobile */}
+                 <div className="p-4 sm:p-6 grid md:grid-cols-12 gap-6">
                      <div className="md:col-span-7 space-y-4">
                         <div>
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Observation</h4>
+                            <h4 className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Observation</h4>
                             <p className="text-slate-800 leading-relaxed text-sm">{issue.visualDescription}</p>
                         </div>
                         <div>
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Likely Cause</h4>
+                            <h4 className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Likely Cause</h4>
                             <p className="text-slate-600 leading-relaxed text-sm">{issue.possibleCause}</p>
                         </div>
                      </div>
-                     <div className="md:col-span-5 bg-blue-50/50 rounded-lg p-5 border border-blue-100/50">
-                        <h4 className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-2 flex items-center">
+                     <div className="md:col-span-5 bg-blue-50/50 rounded-lg p-4 sm:p-5 border border-blue-100/50">
+                        <h4 className="text-[10px] sm:text-xs font-bold text-blue-800 uppercase tracking-widest mb-2 flex items-center">
                             <TrendingUp className="w-3 h-3 mr-1" /> Remediation Strategy
                         </h4>
                         <p className="text-slate-700 text-sm mb-4">
@@ -349,9 +353,9 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
           </div>
 
           {/* Action Footer */}
-          <div className="mt-12 grid md:grid-cols-2 gap-8 break-inside-avoid">
-             <div className="bg-slate-900 rounded-2xl p-8 text-white shadow-2xl">
-                <h3 className="font-bold text-xl mb-6">Homeowner Checklist</h3>
+          <div className="mt-8 sm:mt-12 grid md:grid-cols-2 gap-6 sm:gap-8 break-inside-avoid">
+             <div className="bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-2xl">
+                <h3 className="font-bold text-lg sm:text-xl mb-4 sm:mb-6">Homeowner Checklist</h3>
                 <ul className="space-y-4">
                   {data.nextSteps.map((step, idx) => (
                     <li key={idx} className="flex items-start">
@@ -364,18 +368,18 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                 </ul>
              </div>
 
-             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-2xl flex flex-col items-center justify-center text-center no-print relative overflow-hidden">
+             <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-2xl flex flex-col items-center justify-center text-center no-print relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                     <CheckCircle className="w-32 h-32" />
                 </div>
                 <div className="relative z-10">
-                    <h3 className="font-bold text-2xl mb-2">Finalize Your Inspection</h3>
-                    <p className="text-blue-100 text-sm mb-8 max-w-xs mx-auto">
+                    <h3 className="font-bold text-xl sm:text-2xl mb-2">Finalize Your Inspection</h3>
+                    <p className="text-blue-100 text-sm mb-6 sm:mb-8 max-w-xs mx-auto">
                     This AI scan is an indicator. For legal compliance and insurance, book a certified physical inspection.
                     </p>
                     <button 
                     onClick={handleBooking}
-                    className="w-full bg-white text-blue-700 font-bold py-4 px-6 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="w-full bg-white text-blue-700 font-bold py-3.5 sm:py-4 px-6 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
                     Book Certified Inspector
                     </button>
@@ -385,7 +389,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
         </div>
       </div>
 
-      <div className="mt-16 pt-8 border-t border-slate-200 text-center px-4">
+      <div className="mt-12 sm:mt-16 pt-8 border-t border-slate-200 text-center px-4">
          <p className="text-[10px] text-slate-400 max-w-3xl mx-auto leading-normal">
            {data.disclaimer}
          </p>

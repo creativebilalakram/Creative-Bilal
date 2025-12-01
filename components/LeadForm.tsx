@@ -69,7 +69,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden w-full max-w-lg mx-auto relative z-30 transform -translate-y-4 mx-4 sm:mx-auto">
+    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden w-full max-w-lg mx-auto relative z-30 transform -translate-y-4 mx-3 sm:mx-auto">
       
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-5 sm:px-8 sm:py-6 text-white flex flex-col gap-1">
