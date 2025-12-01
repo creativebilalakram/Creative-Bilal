@@ -44,125 +44,274 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
     setIsGeneratingPdf(true);
     try {
         const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
         let yPos = 20;
 
-        // Branding
-        doc.setFontSize(22);
-        doc.setTextColor(37, 99, 235); // Blue-600
-        doc.text("AusBuild Inspect AI", 20, yPos);
+        // --- HELPER: HEADER ---
+        const drawHeader = () => {
+            // Background
+            doc.setFillColor(30, 41, 59); // Slate 900
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            
+            // Logo / Title
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("AusBuild Inspect AI", margin, 20);
+            
+            // Subtitle
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(148, 163, 184); // Slate 400
+            doc.text("Professional Defect Assessment Report", margin, 30);
+
+            // Date & Ref
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            const dateStr = new Date().toLocaleDateString();
+            doc.text(`Date: ${dateStr}`, pageWidth - margin, 20, { align: 'right' });
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Ref: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, pageWidth - margin, 30, { align: 'right' });
+            
+            return 55; // Return new start Y
+        };
+
+        yPos = drawHeader();
+
+        // --- SECTION 1: EXECUTIVE SUMMARY & IMAGE ---
         
-        yPos += 10;
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Preliminary Visual Defect Report", 20, yPos);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, yPos);
-
-        yPos += 15;
-        doc.setDrawColor(200);
-        doc.line(20, yPos - 5, 190, yPos - 5);
-
-        // Add Image
+        let imageBottomY = yPos;
+        // 1. Image (Left Column)
         if (base64Image) {
             try {
-                // Determine aspect ratio to fit image nicely
-                const imgProps = doc.getImageProperties(`data:image/jpeg;base64,${base64Image}`);
                 const imgWidth = 80;
+                const imgProps = doc.getImageProperties(`data:image/jpeg;base64,${base64Image}`);
                 const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-                doc.addImage(`data:image/jpeg;base64,${base64Image}`, 'JPEG', 20, yPos, imgWidth, imgHeight);
                 
-                // Add Summary side-by-side
-                doc.setFontSize(14);
-                doc.setTextColor(0);
-                doc.text("Inspection Summary", 110, yPos + 10);
+                // Border and Image
+                doc.setDrawColor(226, 232, 240); // Slate 200
+                doc.setLineWidth(0.5);
+                doc.rect(margin, yPos, imgWidth, imgHeight);
+                doc.addImage(`data:image/jpeg;base64,${base64Image}`, 'JPEG', margin, yPos, imgWidth, imgHeight);
                 
-                doc.setFontSize(10);
-                doc.setTextColor(50);
-                const splitSummary = doc.splitTextToSize(data.summary, 80);
-                doc.text(splitSummary, 110, yPos + 20);
-
-                yPos += Math.max(imgHeight, splitSummary.length * 5 + 20) + 15;
+                // Caption
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.setFont("helvetica", "italic");
+                doc.text("Fig 1. Visual evidence analyzed", margin, yPos + imgHeight + 5);
+                
+                imageBottomY = yPos + imgHeight + 15;
             } catch (err) {
-                console.warn("Could not add image to PDF", err);
-                yPos += 10;
+                console.warn("PDF Image Error", err);
             }
-        } else {
-             // Fallback if no image
-             doc.setFontSize(14);
-             doc.setTextColor(0);
-             doc.text("Inspection Summary", 20, yPos);
-             yPos += 7;
-             
-             doc.setFontSize(10);
-             doc.setTextColor(50);
-             const splitSummary = doc.splitTextToSize(data.summary, 170);
-             doc.text(splitSummary, 20, yPos);
-             yPos += splitSummary.length * 5 + 15;
         }
 
-        // Severity Score
-        doc.setFontSize(11);
-        doc.setTextColor(0);
-        doc.text(`Calculated Severity Score: ${data.severityScore}/100`, 20, yPos);
-        yPos += 10;
+        // 2. Summary Data (Right Column)
+        const summaryX = base64Image ? 110 : margin;
+        const summaryWidth = pageWidth - summaryX - margin;
+        let summaryY = yPos;
 
-        // Issues
-        doc.setFontSize(14);
-        doc.text("Detected Issues", 20, yPos);
-        yPos += 10;
+        // Severity Score Badge
+        const scoreColor = data.severityScore > 70 ? [239, 68, 68] : data.severityScore > 40 ? [249, 115, 22] : [16, 185, 129];
+        doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+        doc.roundedRect(summaryX, summaryY, 16, 16, 3, 3, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(data.severityScore.toString(), summaryX + 8, summaryY + 11, { align: 'center' });
+        
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(12);
+        doc.text("Risk Severity Index", summaryX + 22, summaryY + 11);
 
-        data.issues.forEach((issue, index) => {
-            if (yPos > 270) {
-                doc.addPage();
-                yPos = 20;
-            }
-            
-            doc.setFontSize(11);
-            doc.setTextColor(0);
-            doc.text(`${index + 1}. ${issue.category} (${issue.severity} Severity)`, 20, yPos);
-            yPos += 6;
+        summaryY += 25;
 
-            doc.setFontSize(10);
-            doc.setTextColor(80);
-            
-            const desc = `Observation: ${issue.visualDescription}`;
-            const splitDesc = doc.splitTextToSize(desc, 160);
-            doc.text(splitDesc, 25, yPos);
-            yPos += splitDesc.length * 5;
+        // Executive Summary Text
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 41, 59);
+        doc.text("Executive Summary", summaryX, summaryY);
+        summaryY += 6;
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(71, 85, 105);
+        const splitSummary = doc.splitTextToSize(data.summary, summaryWidth);
+        doc.text(splitSummary, summaryX, summaryY);
+        summaryY += (splitSummary.length * 5) + 12;
 
-            const cause = `Possible Cause: ${issue.possibleCause}`;
-            const splitCause = doc.splitTextToSize(cause, 160);
-            doc.text(splitCause, 25, yPos);
-            yPos += splitCause.length * 5;
-
-            const rec = `Recommendation: ${issue.recommendation}`;
-            const splitRec = doc.splitTextToSize(rec, 160);
-            doc.text(splitRec, 25, yPos);
-            yPos += splitRec.length * 5 + 5;
+        // Categories
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 41, 59);
+        doc.text("Detected Categories:", summaryX, summaryY);
+        summaryY += 6;
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(71, 85, 105);
+        data.topCategories.forEach(cat => {
+            doc.setFillColor(71, 85, 105);
+            doc.circle(summaryX + 2, summaryY - 1.5, 1, 'F'); // Bullet point
+            doc.text(cat, summaryX + 6, summaryY);
+            summaryY += 6;
         });
 
-        // Footer / Disclaimer
-        yPos += 10;
-        if (yPos > 260) {
+        // Align Y position to the bottom of the tallest column
+        yPos = Math.max(imageBottomY, summaryY) + 10;
+
+        // --- SECTION 2: DETAILED FINDINGS ---
+        
+        // Section Header
+        doc.setFillColor(241, 245, 249); // Slate 100
+        doc.rect(margin, yPos, pageWidth - (margin * 2), 12, 'F');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.text("DETAILED DEFECT BREAKDOWN", margin + 4, yPos + 8);
+        yPos += 20;
+
+        // Issues Loop
+        data.issues.forEach((issue, index) => {
+            // Check for page break
+            // We need about 50 units for a card. If not enough space, add page.
+            if (yPos > pageHeight - 60) {
+                doc.addPage();
+                yPos = drawHeader();
+            }
+
+            // Card Header (Colored by Severity)
+            const isHigh = issue.severity === 'High';
+            const isMod = issue.severity === 'Moderate';
+            
+            // Header Bg
+            doc.setFillColor(isHigh ? 254 : isMod ? 255 : 239, isHigh ? 242 : isMod ? 247 : 246, isHigh ? 242 : isMod ? 237 : 255);
+            doc.roundedRect(margin, yPos, pageWidth - (margin*2), 9, 1, 1, 'F');
+
+            // Header Text
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text(`#${index + 1}  ${issue.category}`, margin + 4, yPos + 6);
+            
+            // Severity Label (Right aligned)
+            const sevColor = isHigh ? [220, 38, 38] : isMod ? [234, 88, 12] : [37, 99, 235];
+            doc.setTextColor(sevColor[0], sevColor[1], sevColor[2]);
+            doc.text(issue.severity.toUpperCase(), pageWidth - margin - 50, yPos + 6);
+            
+            // Urgency
+            doc.setTextColor(100);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.text(issue.urgency, pageWidth - margin - 4, yPos + 6, { align: 'right' });
+
+            yPos += 14;
+
+            // Content Columns
+            const colWidth = (pageWidth - (margin * 2) - 10) / 2;
+            
+            // Col 1: Observation
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(71, 85, 105);
+            doc.setFontSize(9);
+            doc.text("Observation", margin + 2, yPos);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(51, 65, 85);
+            const obsText = doc.splitTextToSize(issue.visualDescription, colWidth);
+            doc.text(obsText, margin + 2, yPos + 5);
+
+            // Col 2: Cause
+            const col2X = margin + colWidth + 10;
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(71, 85, 105);
+            doc.text("Likely Cause", col2X, yPos);
+
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(51, 65, 85);
+            const causeText = doc.splitTextToSize(issue.possibleCause, colWidth);
+            doc.text(causeText, col2X, yPos + 5);
+
+            // Calculate height of this row
+            const rowHeight = Math.max(obsText.length, causeText.length) * 4 + 10;
+            yPos += rowHeight;
+
+            // Remediation Box
+            doc.setDrawColor(219, 234, 254); // Blue 100
+            doc.setFillColor(239, 246, 255); // Blue 50
+            doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 16, 1, 1, 'FD'); // Fill and Draw
+            
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(37, 99, 235); // Blue 600
+            doc.text("Remediation Strategy:", margin + 3, yPos + 6);
+
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(30, 41, 59);
+            // We only show one line or wrapped line to keep it compact
+            const recText = doc.splitTextToSize(issue.recommendation, pageWidth - (margin*2) - 6);
+            doc.text(recText, margin + 3, yPos + 11);
+            
+            // Dynamic height adjustment for recommendation box if text is long
+            const recBoxHeight = (recText.length * 4) + 10;
+            // Redraw box if needed (simplified approach: just increment Y based on text)
+            
+            yPos += recBoxHeight + 8; // Margin bottom
+        });
+
+        // --- SECTION 3: FOOTER CTA ---
+        if (yPos > pageHeight - 60) {
             doc.addPage();
-            yPos = 20;
+            yPos = drawHeader();
         }
-        
-        doc.setDrawColor(200);
-        doc.line(20, yPos, 190, yPos);
-        yPos += 10;
-        
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text("DISCLAIMER:", 20, yPos);
+
         yPos += 5;
-        const disclaimerText = data.disclaimer;
-        const splitDisclaimer = doc.splitTextToSize(disclaimerText, 170);
-        doc.text(splitDisclaimer, 20, yPos);
+        // Dark CTA Bar
+        doc.setFillColor(15, 23, 42); // Slate 900
+        doc.roundedRect(margin, yPos, pageWidth - (margin * 2), 35, 2, 2, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Finalize Your Inspection", margin + 10, yPos + 12);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(203, 213, 225); // Slate 300
+        doc.text("This report is a preliminary AI scan. For insurance purposes, a certified inspection is required.", margin + 10, yPos + 22);
+
+        // Button Appearance
+        doc.setFillColor(37, 99, 235); // Blue 600
+        doc.roundedRect(pageWidth - margin - 60, yPos + 8, 50, 18, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("Book Inspector", pageWidth - margin - 35, yPos + 20, { align: 'center' });
+        
+        // Link Overlay
+        doc.link(pageWidth - margin - 60, yPos + 8, 50, 18, { url: "https://calendly.com/" });
+
+        // --- GLOBAL FOOTERS (Page Numbers) ---
+        const pageCount = doc.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            // Separator
+            doc.setDrawColor(226, 232, 240);
+            doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+
+            // Disclaimer Tiny
+            doc.setFontSize(7);
+            doc.setTextColor(148, 163, 184);
+            doc.text("AusBuild Inspect AI - Preliminary Visual Report - Not a Legal Document", margin, pageHeight - 8);
+            
+            // Page Number
+            doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+        }
 
         doc.save(`AusBuild-Report-${new Date().toISOString().slice(0,10)}.pdf`);
     } catch (e) {
         console.error("PDF Generation Error", e);
-        alert("Failed to generate PDF. Please use browser print instead.");
+        alert("Failed to generate PDF. Please try again.");
     } finally {
         setIsGeneratingPdf(false);
     }
@@ -286,7 +435,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                   className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-colors shadow-sm no-print"
                 >
                   {isGeneratingPdf ? <Activity className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  <span>Export Report</span>
+                  <span>Export Report (PDF)</span>
                 </button>
              )}
           </div>
