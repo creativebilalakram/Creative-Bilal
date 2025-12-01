@@ -26,22 +26,41 @@ const App: React.FC = () => {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStepIndex, setScanStepIndex] = useState(0);
 
-  // --- IFRAME RESIZER LOGIC ---
+  // --- IFRAME RESIZER LOGIC (STABILIZED) ---
   useEffect(() => {
+    let lastHeight = 0;
+    
     const sendHeight = () => {
       const rootElement = document.getElementById('root');
       if (rootElement) {
-        // Add padding to height to prevent scrollbar flickering
-        const height = rootElement.offsetHeight + 50; 
-        window.parent.postMessage({ type: 'setHeight', height: height }, '*');
+        // Use scrollHeight to capture full content height
+        // We add a minimal fixed buffer (10px) for bottom breathing room
+        const height = rootElement.scrollHeight + 10;
+        
+        // Only send update if height changed by more than 2px to prevent infinite micro-adjustments
+        // This stops the "growing" bug where iframe resize triggers content resize triggers iframe resize...
+        if (Math.abs(height - lastHeight) > 2) {
+            lastHeight = height;
+            window.parent.postMessage({ type: 'setHeight', height: height }, '*');
+        }
       }
     };
+
+    // Initial sizing
     sendHeight();
-    // More aggressive sizing checks for stability
-    const resizeObserver = new ResizeObserver(() => sendHeight());
+
+    // Use ResizeObserver for efficient, event-driven updates
+    const resizeObserver = new ResizeObserver(() => {
+        sendHeight();
+    });
+    
     const rootEl = document.getElementById('root');
     if (rootEl) resizeObserver.observe(rootEl);
-    const interval = setInterval(sendHeight, 200);
+    
+    // Backup interval (slower) to catch any layout shifts missed by observer
+    // but checks the same condition to avoid loops
+    const interval = setInterval(sendHeight, 1000);
+    
     return () => {
       resizeObserver.disconnect();
       clearInterval(interval);
@@ -153,7 +172,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-hidden">
+    // CRITICAL FIX: Removed 'min-h-screen' to prevent infinite loop with iframe resizer. 
+    // Used 'h-auto' and 'w-full' to let content dictate height naturally.
+    <div className="w-full h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-hidden">
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
@@ -192,14 +213,14 @@ const App: React.FC = () => {
 
       {/* --- OVERLAY MODAL FOR ANALYSIS (CENTERED) --- */}
       {(loadingState.status === 'analyzing' || loadingState.status === 'error') && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in h-[100dvh]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fade-in h-[100dvh]">
             
             {/* The KILLER CARD */}
-            <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_80px_-20px_rgba(59,130,246,0.5)] relative">
+            <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_80px_-20px_rgba(59,130,246,0.6)] relative transform transition-all">
                 
                 {/* Decoration Lines */}
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
-                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60"></div>
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60"></div>
                 
                 {/* Card Content Grid - Fixed Height to prevent Jitter */}
                 <div className="flex flex-col md:flex-row h-[420px] md:h-[320px]">
