@@ -3,7 +3,7 @@ import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
 import { AnalysisResult, LoadingState } from './types';
-import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Server, Cpu, Radio, Shield, Zap } from 'lucide-react';
+import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Server, Cpu, Radio, Shield, Zap, RefreshCw } from 'lucide-react';
 
 const SCAN_STEPS = [
   "INITIALIZING_VISION_MODELS",
@@ -31,20 +31,20 @@ const App: React.FC = () => {
     const sendHeight = () => {
       const rootElement = document.getElementById('root');
       if (rootElement) {
-        const height = rootElement.offsetHeight + 10;
+        // Add padding to height to prevent scrollbar flickering
+        const height = rootElement.offsetHeight + 50; 
         window.parent.postMessage({ type: 'setHeight', height: height }, '*');
       }
     };
     sendHeight();
+    // More aggressive sizing checks for stability
     const resizeObserver = new ResizeObserver(() => sendHeight());
     const rootEl = document.getElementById('root');
     if (rootEl) resizeObserver.observe(rootEl);
-    const interval = setInterval(sendHeight, 500);
-    const stateChangeTimeout = setTimeout(sendHeight, 100);
+    const interval = setInterval(sendHeight, 200);
     return () => {
       resizeObserver.disconnect();
       clearInterval(interval);
-      clearTimeout(stateChangeTimeout);
     };
   }, [result, loadingState, scanStepIndex, previewUrl]); 
 
@@ -59,7 +59,7 @@ const App: React.FC = () => {
       progressInterval = setInterval(() => {
         setScanProgress(prev => {
            if (prev >= 98) return prev;
-           return prev + (Math.random() * 3); 
+           return prev + (Math.random() * 4); // Faster, smoother progress
         });
       }, 100);
 
@@ -124,18 +124,16 @@ const App: React.FC = () => {
     setLoadingState({ status: 'analyzing', message: 'Scanning image for defects...' });
     setResult(null);
     setBase64Data(null);
-    // Don't scroll to top immediately, the modal will handle focus
     
+    // Smooth scroll to top to ensure modal is centered in view
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     try {
       const { base64, mimeType } = await compressImage(file);
       setBase64Data(base64); 
       const data = await analyzeBuildingImage(base64, mimeType);
       setResult(data);
       setLoadingState({ status: 'success' });
-      // Small delay before closing modal to show 100%
-      setTimeout(() => {
-        // Logic handled in render
-      }, 500);
     } catch (error) {
       console.error("Analysis failed:", error);
       setLoadingState({ 
@@ -151,23 +149,24 @@ const App: React.FC = () => {
     setBase64Data(null);
     setLoadingState({ status: 'idle' });
     setScanProgress(0);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="w-full h-fit font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-hidden">
+    <div className="w-full min-h-screen font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-hidden">
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
           100% { top: 100%; opacity: 0; }
         }
         @keyframes scan-vertical {
-            0% { top: 0%; opacity: 0.8; box-shadow: 0 0 10px rgba(59,130,246,0.8); }
-            50% { opacity: 0.4; }
-            100% { top: 100%; opacity: 0.8; box-shadow: 0 0 10px rgba(59,130,246,0.8); }
+            0% { top: 0%; opacity: 0; }
+            15% { opacity: 1; box-shadow: 0 0 15px rgba(59,130,246,0.9); }
+            85% { opacity: 1; box-shadow: 0 0 15px rgba(59,130,246,0.9); }
+            100% { top: 100%; opacity: 0; }
         }
         .animate-scan-vertical {
-            animation: scan-vertical 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            animation: scan-vertical 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
         .bg-grid-clean {
            background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px);
@@ -175,7 +174,7 @@ const App: React.FC = () => {
         }
         /* Dark Technical Grid for Modal */
         .bg-grid-tech {
-           background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+           background-image: linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
            background-size: 20px 20px;
         }
         .bg-noise {
@@ -193,20 +192,20 @@ const App: React.FC = () => {
 
       {/* --- OVERLAY MODAL FOR ANALYSIS (CENTERED) --- */}
       {(loadingState.status === 'analyzing' || loadingState.status === 'error') && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in h-[100dvh]">
             
             {/* The KILLER CARD */}
-            <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] relative">
+            <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_80px_-20px_rgba(59,130,246,0.5)] relative">
                 
                 {/* Decoration Lines */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
                 <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
                 
-                {/* Card Content Grid */}
-                <div className="flex flex-col md:flex-row h-auto md:h-[320px]">
+                {/* Card Content Grid - Fixed Height to prevent Jitter */}
+                <div className="flex flex-col md:flex-row h-[420px] md:h-[320px]">
                     
                     {/* Left/Top: Image Sensor */}
-                    <div className="relative w-full md:w-5/12 h-48 md:h-full bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
+                    <div className="relative w-full h-[180px] md:h-full md:w-5/12 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
                         {/* Background Grid */}
                         <div className="absolute inset-0 bg-grid-tech"></div>
                         
@@ -221,44 +220,46 @@ const App: React.FC = () => {
                         <div className="absolute left-0 w-full h-[2px] bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,1)] animate-scan-vertical z-20"></div>
 
                         {/* HUD Elements */}
-                        <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                            <span className="text-[9px] font-mono text-red-400 tracking-widest uppercase">REC_Active</span>
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-30">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                            <span className="text-[10px] font-mono font-bold text-red-400 tracking-widest uppercase">REC_Active</span>
                         </div>
-                        <div className="absolute bottom-2 right-2">
-                             <ScanLine className="w-4 h-4 text-blue-500/80" />
+                        <div className="absolute bottom-3 right-3 z-30">
+                             <ScanLine className="w-5 h-5 text-blue-500/80 drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]" />
                         </div>
                         
                         {/* Corner Brackets */}
-                        <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-blue-500/30"></div>
-                        <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-blue-500/30"></div>
+                        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500/30"></div>
+                        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-500/30"></div>
                     </div>
 
                     {/* Right/Bottom: Data Console */}
-                    <div className="flex-1 p-4 md:p-6 flex flex-col justify-between bg-slate-950 relative">
+                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between bg-slate-950 relative">
                         
                         {/* Header */}
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <Shield className="w-3.5 h-3.5 text-blue-500" />
-                                    <h3 className="text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-[0.2em]">AusBuild Diagnostics</h3>
+                                    <div className="p-1 rounded bg-blue-500/10 border border-blue-500/20">
+                                      <Shield className="w-3.5 h-3.5 text-blue-500" />
+                                    </div>
+                                    <h3 className="text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-[0.2em] shadow-blue-500/50">AusBuild Core</h3>
                                 </div>
-                                <div className="px-1.5 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-[9px] font-mono text-blue-400">
-                                    V2.4.0
+                                <div className="flex items-center gap-2">
+                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                   <span className="text-[9px] font-mono text-slate-500">ONLINE</span>
                                 </div>
                             </div>
                             
-                            <div className="h-[1px] w-full bg-slate-800 mb-4"></div>
+                            <div className="h-[1px] w-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 mb-5"></div>
                         
-                            {/* Dynamic Text Console - Compact */}
-                            <div className="space-y-3 mb-4">
-                                
+                            {/* Dynamic Text Console - Fixed Height Wrapper to Stop Jitter */}
+                            <div className="h-[90px] mb-2 flex flex-col justify-center space-y-3">
                                 <div className="flex items-start gap-3">
                                     <Activity className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
-                                    <div className="flex-1">
-                                        <p className="text-[10px] md:text-xs font-mono text-slate-400 uppercase tracking-wide mb-1">Current Process</p>
-                                        <p className="text-xs md:text-sm font-mono text-blue-400 font-bold animate-pulse truncate">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Process Node</p>
+                                        <p className="text-[11px] md:text-xs font-mono text-blue-400 font-bold truncate tracking-wide">
                                             {loadingState.status === 'error' ? 'SYSTEM_FAILURE' : SCAN_STEPS[scanStepIndex]}
                                         </p>
                                     </div>
@@ -266,9 +267,9 @@ const App: React.FC = () => {
 
                                 <div className="flex items-start gap-3">
                                     <Database className="w-3.5 h-3.5 text-slate-600 mt-0.5 shrink-0" />
-                                    <div className="flex-1">
-                                        <p className="text-[10px] md:text-xs font-mono text-slate-400 uppercase tracking-wide mb-1">Target Database</p>
-                                        <p className="text-[10px] md:text-xs font-mono text-slate-300">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Reference Lib</p>
+                                        <p className="text-[10px] md:text-xs font-mono text-slate-300 tracking-wide">
                                             NCC_AU_STANDARDS_2025.JSON
                                         </p>
                                     </div>
@@ -278,23 +279,31 @@ const App: React.FC = () => {
                         
                         {/* Error Message if Any */}
                         {loadingState.status === 'error' && (
-                            <div className="bg-red-500/10 border border-red-500/20 p-2 rounded text-[10px] text-red-400 font-mono mb-2">
-                                {loadingState.message}
-                                <button onClick={handleReset} className="block mt-2 underline hover:text-red-300">RETRY_CONNECTION</button>
+                            <div className="absolute inset-0 z-40 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center">
+                                <AlertTriangle className="w-8 h-8 text-red-500 mb-3" />
+                                <p className="text-red-400 font-mono text-xs mb-4">{loadingState.message}</p>
+                                <button onClick={handleReset} className="px-4 py-2 border border-red-500/30 text-red-400 text-xs font-bold rounded hover:bg-red-500/10 flex items-center gap-2">
+                                  <RefreshCw className="w-3 h-3" /> RETRY SYSTEM
+                                </button>
                             </div>
                         )}
 
                         {/* Progress Section */}
-                        <div className="mt-auto">
-                             <div className="flex justify-between items-end mb-1.5">
-                                 <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase">Processing...</span>
+                        <div className="mt-auto pt-4 border-t border-slate-800/50">
+                             <div className="flex justify-between items-end mb-2">
+                                 <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1.5">
+                                    <div className="w-2 h-2 border border-slate-600 border-t-transparent rounded-full animate-spin"></div>
+                                    Analyzing Data...
+                                 </span>
                                  <span className="text-sm md:text-base font-mono font-bold text-white">{Math.round(scanProgress)}%</span>
                              </div>
-                             <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                             <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden relative">
                                  <div 
-                                    className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] transition-all duration-150"
+                                    className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] transition-all duration-150 relative z-10"
                                     style={{ width: `${Math.max(5, scanProgress)}%` }}
                                  ></div>
+                                 {/* Progress Glitch Effect */}
+                                 <div className="absolute top-0 bottom-0 bg-white/20 w-full animate-pulse z-0" style={{ left: '-100%' }}></div>
                              </div>
                         </div>
 
@@ -308,16 +317,11 @@ const App: React.FC = () => {
         
         {/* Main Content Area */}
         {!previewUrl || loadingState.status === 'analyzing' ? (
-             // Show Hero initially OR if analyzing (analyzing overlays on top)
-             // We keep hero mounted or similar layout to prevent layout shifts underneath
-             !previewUrl ? (
+             // Show Hero initially OR if analyzing (Background stays visible behind modal)
+             // This prevents the black background issue
+             <div className={loadingState.status === 'analyzing' ? 'blur-sm grayscale opacity-30 pointer-events-none transition-all duration-1000' : ''}>
                 <Hero onImageSelected={handleImageSelected} isLoading={false} />
-             ) : (
-                /* Placeholder background when analyzing (behind the modal) */
-                <div className="w-full h-screen flex items-center justify-center">
-                    <div className="text-slate-300 animate-pulse text-sm font-mono tracking-widest">SYSTEM BUSY</div>
-                </div>
-             )
+             </div>
         ) : (
           /* RESULT VIEW (Only shows when status === 'success') */
           <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:p-8 animate-fade-in pb-12">
