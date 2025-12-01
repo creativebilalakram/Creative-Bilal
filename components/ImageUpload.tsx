@@ -103,7 +103,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
         min-h-[280px] sm:min-h-[420px]
         rounded-[1.5rem] sm:rounded-[2.5rem]
         shadow-[0_20px_60px_-12px_rgba(0,0,0,0.12),0_8px_24px_-8px_rgba(0,0,0,0.06)] 
-        p-[3px] overflow-hidden bg-slate-200
+        p-[2px] /* 2px padding for sharp border */
+        overflow-hidden bg-slate-100
         flex flex-col 
         transition-all duration-500 ease-out
         ${dragActive ? 'scale-[1.01]' : ''}
@@ -113,15 +114,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
       onDragOver={handleDrag}
       onDrop={handleDrop}
     >
-        {/* --- BORDER ANIMATIONS --- */}
-        <div className="absolute inset-0 bg-slate-200" />
-        <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#e2e8f0_0%,#cbd5e1_50%,#e2e8f0_100%)] opacity-100 group-hover:opacity-0 transition-opacity duration-500" />
-        <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#3b82f6_50%,#0000_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* --- SHORT SNAKE BORDER ANIMATION (REVERTED) --- */}
+        <div className="absolute inset-0 bg-slate-200/50" />
+        
+        {/* Default Grey Snake (Short Tail) */}
+        <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_90%,#94a3b8_95%,#e2e8f0_100%)] opacity-70 group-hover:opacity-0 transition-opacity duration-500" />
+        
+        {/* Hover Blue Snake (Short Tail) */}
+        <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_92%,#3b82f6_98%,#ffffff_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Drag Active State */}
         {dragActive && (
              <div className="absolute inset-[-100%] animate-[spin_1.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#60a5fa_50%,#3b82f6_100%)] opacity-100 z-10" />
         )}
 
-        {/* --- INNER CARD CONTENT WITH DEPTH --- */}
+        {/* --- INNER CARD CONTENT WITH KILLER DEPTH --- */}
         <div className="relative flex-1 w-full h-full rounded-[1.4rem] sm:rounded-[2.4rem] flex flex-col justify-center overflow-hidden z-20 bg-[#fafafa]">
             
             {/* 1. Technical Grid Texture */}
