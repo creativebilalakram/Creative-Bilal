@@ -3,17 +3,17 @@ import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
 import { AnalysisResult, LoadingState } from './types';
-import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Server, Cpu } from 'lucide-react';
+import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Server, Cpu, Radio, Shield, Zap } from 'lucide-react';
 
 const SCAN_STEPS = [
-  "Initializing vision models...",
-  "Segmenting structural elements...",
-  "Detecting surface anomalies...",
-  "Analyzing material texture...",
-  "Cross-referencing AU Standards...",
-  "Calculating severity score...",
-  "Generating repair recommendations...",
-  "Finalizing report..."
+  "INITIALIZING_VISION_MODELS",
+  "SEGMENTING_STRUCTURAL_ELEMENTS",
+  "DETECTING_SURFACE_ANOMALIES",
+  "ANALYZING_MATERIAL_TEXTURE",
+  "REF_DB: NCC_2025_COMPLIANCE",
+  "CALCULATING_RISK_VECTORS",
+  "GENERATING_REMEDIATION_PLAN",
+  "FINALIZING_REPORT_OUTPUT"
 ];
 
 const App: React.FC = () => {
@@ -58,14 +58,14 @@ const App: React.FC = () => {
 
       progressInterval = setInterval(() => {
         setScanProgress(prev => {
-           if (prev >= 95) return prev;
-           return prev + (Math.random() * 2.5); 
+           if (prev >= 98) return prev;
+           return prev + (Math.random() * 3); 
         });
-      }, 150);
+      }, 100);
 
       stepInterval = setInterval(() => {
         setScanStepIndex(prev => (prev + 1) % SCAN_STEPS.length);
-      }, 1000);
+      }, 800);
     } else if (loadingState.status === 'success') {
        setScanProgress(100);
     }
@@ -124,14 +124,18 @@ const App: React.FC = () => {
     setLoadingState({ status: 'analyzing', message: 'Scanning image for defects...' });
     setResult(null);
     setBase64Data(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
+    // Don't scroll to top immediately, the modal will handle focus
+    
     try {
       const { base64, mimeType } = await compressImage(file);
-      setBase64Data(base64); // Save for PDF export
+      setBase64Data(base64); 
       const data = await analyzeBuildingImage(base64, mimeType);
       setResult(data);
       setLoadingState({ status: 'success' });
+      // Small delay before closing modal to show 100%
+      setTimeout(() => {
+        // Logic handled in render
+      }, 500);
     } catch (error) {
       console.error("Analysis failed:", error);
       setLoadingState({ 
@@ -158,16 +162,21 @@ const App: React.FC = () => {
           100% { top: 100%; opacity: 0; }
         }
         @keyframes scan-vertical {
-            0%, 100% { top: 0%; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+            0% { top: 0%; opacity: 0.8; box-shadow: 0 0 10px rgba(59,130,246,0.8); }
+            50% { opacity: 0.4; }
+            100% { top: 100%; opacity: 0.8; box-shadow: 0 0 10px rgba(59,130,246,0.8); }
         }
         .animate-scan-vertical {
-            animation: scan-vertical 2s linear infinite;
+            animation: scan-vertical 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
         .bg-grid-clean {
            background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px);
            background-size: 40px 40px;
+        }
+        /* Dark Technical Grid for Modal */
+        .bg-grid-tech {
+           background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+           background-size: 20px 20px;
         }
         .bg-noise {
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
@@ -182,164 +191,155 @@ const App: React.FC = () => {
       <div className="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="fixed bottom-[-10%] right-[10%] w-[400px] h-[400px] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <main className="flex-grow flex flex-col relative z-10">
-        
-        {!previewUrl ? (
-          <Hero onImageSelected={handleImageSelected} isLoading={false} />
-        ) : (
-          /* Centering Container for Analysis Mode */
-          <div className={`
-              w-full max-w-7xl mx-auto px-3 sm:px-6 lg:p-8 animate-fade-in pb-12
-              ${loadingState.status === 'analyzing' ? 'min-h-[90vh] flex flex-col items-center justify-center' : ''}
-          `}>
-            <div className="space-y-8 w-full">
-              
-              {/* === PRO ANALYSIS INTERFACE === */}
-              <div className={`
-                  relative bg-white rounded-[2rem] overflow-hidden 
-                  shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)] 
-                  border border-slate-100
-                  transition-all duration-700 ease-in-out
-                  mx-auto
-                  ${loadingState.status === 'analyzing' ? 'w-full max-w-5xl scale-100' : 'w-full'}
-              `}>
+      {/* --- OVERLAY MODAL FOR ANALYSIS (CENTERED) --- */}
+      {(loadingState.status === 'analyzing' || loadingState.status === 'error') && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in">
+            
+            {/* The KILLER CARD */}
+            <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] relative">
                 
-                <div className={`flex transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'flex-row h-28 items-stretch' : 'flex-col md:flex-row min-h-[480px]'}`}>
+                {/* Decoration Lines */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+                
+                {/* Card Content Grid */}
+                <div className="flex flex-col md:flex-row h-auto md:h-[320px]">
                     
-                    {/* Left: Visual Sensor (Image) */}
-                    <div className={`relative bg-slate-950 overflow-hidden group flex items-center justify-center transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'w-24 sm:w-28 md:w-36 flex-shrink-0' : 'w-full md:w-5/12'}`}>
-                         <img 
-                           src={previewUrl} 
-                           alt="Analyzed Target" 
-                           className={`w-full h-full object-cover absolute inset-0 transition-all duration-1000 ${loadingState.status === 'analyzing' ? 'opacity-50 scale-105' : 'opacity-100'}`} 
-                         />
-                         
-                         {loadingState.status === 'analyzing' && (
-                           <>
-                             {/* Professional Grid Overlay */}
-                             <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
-                             
-                             {/* Scanning Beam */}
-                             <div className="absolute left-0 w-full h-0.5 bg-blue-400 shadow-[0_0_25px_rgba(59,130,246,1)] animate-scan-vertical z-20"></div>
-                             
-                             {/* Radar UI Elements */}
-                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-64 h-64 border border-blue-500/20 rounded-full animate-ping opacity-30 absolute"></div>
-                                <div className="w-48 h-48 border border-blue-500/40 rounded-full animate-spin [animation-duration:4s] border-t-transparent border-l-transparent absolute"></div>
-                                <ScanLine className="relative text-blue-400 w-10 h-10 animate-pulse drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
-                             </div>
+                    {/* Left/Top: Image Sensor */}
+                    <div className="relative w-full md:w-5/12 h-48 md:h-full bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
+                        {/* Background Grid */}
+                        <div className="absolute inset-0 bg-grid-tech"></div>
+                        
+                        {/* The Image */}
+                        <img 
+                          src={previewUrl!} 
+                          alt="Target" 
+                          className="w-full h-full object-cover opacity-60 mix-blend-overlay contrast-125 saturate-0 group-hover:saturate-50 transition-all duration-500" 
+                        />
+                        
+                        {/* Scanner Beam */}
+                        <div className="absolute left-0 w-full h-[2px] bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,1)] animate-scan-vertical z-20"></div>
 
-                             {/* Image Meta Data Overlay */}
-                             <div className="absolute bottom-4 left-4 right-4 flex justify-between text-[9px] font-mono text-blue-300/80 uppercase tracking-widest">
-                                <span>Input: JPG_HQ</span>
-                                <span>Target: Structural</span>
-                             </div>
-                           </>
-                         )}
+                        {/* HUD Elements */}
+                        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-[9px] font-mono text-red-400 tracking-widest uppercase">REC_Active</span>
+                        </div>
+                        <div className="absolute bottom-2 right-2">
+                             <ScanLine className="w-4 h-4 text-blue-500/80" />
+                        </div>
+                        
+                        {/* Corner Brackets */}
+                        <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-blue-500/30"></div>
+                        <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-blue-500/30"></div>
                     </div>
-                    
-                    {/* Right: Intelligence Panel */}
-                    <div className={`flex flex-col justify-center relative transition-all duration-700 ease-in-out ${loadingState.status === 'success' ? 'flex-1 p-4 md:px-8 bg-white' : 'w-full md:w-7/12 p-6 md:p-12 bg-white'}`}>
-                      
-                      {loadingState.status === 'analyzing' && (
-                        <div className="space-y-8 animate-fade-in w-full max-w-lg mx-auto">
-                          
-                          {/* Header Badge */}
-                          <div className="flex items-center gap-3">
-                             <div className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></span>
-                             </div>
-                             <span className="text-xs font-bold tracking-[0.2em] text-blue-600 uppercase">System Active</span>
-                          </div>
 
-                          <div>
-                            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 tracking-tight">Processing Visuals</h2>
-                            <p className="text-slate-500 text-base leading-relaxed">
-                                Our AI is currently segmenting the image to identify structural anomalies against NCC standards.
-                            </p>
-                          </div>
-
-                          {/* Tech Console */}
-                          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 font-mono text-sm relative overflow-hidden group">
-                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                             <div className="flex justify-between items-start mb-2">
-                                <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">Current Protocol</span>
-                                <Cpu className="w-4 h-4 text-slate-400" />
-                             </div>
-                             <div className="text-slate-800 font-bold text-lg mb-4">
-                                STRUCTURAL_DIAGNOSTIC_V2
-                             </div>
-                             
-                             <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-slate-500">
-                                    <span>Status</span>
-                                    <span className="text-blue-600 font-bold animate-pulse">{SCAN_STEPS[scanStepIndex]}</span>
+                    {/* Right/Bottom: Data Console */}
+                    <div className="flex-1 p-4 md:p-6 flex flex-col justify-between bg-slate-950 relative">
+                        
+                        {/* Header */}
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Shield className="w-3.5 h-3.5 text-blue-500" />
+                                    <h3 className="text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-[0.2em]">AusBuild Diagnostics</h3>
                                 </div>
-                                <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
-                                    <div className="bg-blue-600 h-full rounded-full transition-all duration-300" style={{width: `${(scanStepIndex / SCAN_STEPS.length) * 100}%`}}></div>
+                                <div className="px-1.5 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-[9px] font-mono text-blue-400">
+                                    V2.4.0
                                 </div>
-                             </div>
-                          </div>
+                            </div>
+                            
+                            <div className="h-[1px] w-full bg-slate-800 mb-4"></div>
+                        
+                            {/* Dynamic Text Console - Compact */}
+                            <div className="space-y-3 mb-4">
+                                
+                                <div className="flex items-start gap-3">
+                                    <Activity className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-[10px] md:text-xs font-mono text-slate-400 uppercase tracking-wide mb-1">Current Process</p>
+                                        <p className="text-xs md:text-sm font-mono text-blue-400 font-bold animate-pulse truncate">
+                                            {loadingState.status === 'error' ? 'SYSTEM_FAILURE' : SCAN_STEPS[scanStepIndex]}
+                                        </p>
+                                    </div>
+                                </div>
 
-                          {/* Master Progress */}
-                          <div className="space-y-2 pt-2">
-                             <div className="flex justify-between items-end">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Progress</span>
-                                <span className="text-2xl font-black text-slate-900 leading-none">{Math.round(scanProgress)}%</span>
-                             </div>
-                             <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all duration-200 ease-out"
-                                  style={{ width: `${Math.max(2, scanProgress)}%` }}
-                                ></div>
-                             </div>
-                          </div>
+                                <div className="flex items-start gap-3">
+                                    <Database className="w-3.5 h-3.5 text-slate-600 mt-0.5 shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-[10px] md:text-xs font-mono text-slate-400 uppercase tracking-wide mb-1">Target Database</p>
+                                        <p className="text-[10px] md:text-xs font-mono text-slate-300">
+                                            NCC_AU_STANDARDS_2025.JSON
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                      )}
+                        
+                        {/* Error Message if Any */}
+                        {loadingState.status === 'error' && (
+                            <div className="bg-red-500/10 border border-red-500/20 p-2 rounded text-[10px] text-red-400 font-mono mb-2">
+                                {loadingState.message}
+                                <button onClick={handleReset} className="block mt-2 underline hover:text-red-300">RETRY_CONNECTION</button>
+                            </div>
+                        )}
 
-                      {loadingState.status === 'error' && (
-                        <div className="bg-red-50/80 border border-red-100 rounded-2xl p-6 sm:p-8 text-red-900 max-w-md mx-auto text-center backdrop-blur-sm">
-                           <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
-                             <AlertTriangle className="w-7 h-7 text-red-600" />
-                           </div>
-                           <h3 className="font-bold text-xl mb-2">Analysis Interrupted</h3>
-                           <p className="text-sm mb-6 text-red-700 leading-relaxed opacity-90">{loadingState.message}</p>
-                           <button onClick={handleReset} className="w-full px-6 py-3 bg-white border border-red-200 text-red-600 font-bold rounded-xl text-sm hover:bg-red-50 transition-all shadow-sm">
-                             Restart System
-                           </button>
+                        {/* Progress Section */}
+                        <div className="mt-auto">
+                             <div className="flex justify-between items-end mb-1.5">
+                                 <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase">Processing...</span>
+                                 <span className="text-sm md:text-base font-mono font-bold text-white">{Math.round(scanProgress)}%</span>
+                             </div>
+                             <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                 <div 
+                                    className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] transition-all duration-150"
+                                    style={{ width: `${Math.max(5, scanProgress)}%` }}
+                                 ></div>
+                             </div>
                         </div>
-                      )}
-
-                      {loadingState.status === 'success' && (
-                        <div className="animate-fade-in flex flex-col md:flex-row items-center justify-between gap-4 w-full h-full">
-                           <div className="flex items-center gap-4 w-full md:w-auto">
-                              <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                              </div>
-                              <div>
-                                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                   Scan Complete
-                                 </h2>
-                                 <p className="text-slate-500 text-sm">
-                                   Found <span className="font-bold text-slate-900">{result?.issues.length} issues</span>.
-                                 </p>
-                              </div>
-                           </div>
-                           
-                           <div className="flex items-center gap-3 w-full md:w-auto">
-                               <button 
-                                 onClick={handleReset}
-                                 className="px-4 py-2.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 hover:text-slate-700 text-sm transition-colors whitespace-nowrap shadow-sm hover:shadow-md"
-                               >
-                                 New Scan
-                               </button>
-                           </div>
-                        </div>
-                      )}
 
                     </div>
                 </div>
+            </div>
+        </div>
+      )}
+
+      <main className="flex-grow flex flex-col relative z-10">
+        
+        {/* Main Content Area */}
+        {!previewUrl || loadingState.status === 'analyzing' ? (
+             // Show Hero initially OR if analyzing (analyzing overlays on top)
+             // We keep hero mounted or similar layout to prevent layout shifts underneath
+             !previewUrl ? (
+                <Hero onImageSelected={handleImageSelected} isLoading={false} />
+             ) : (
+                /* Placeholder background when analyzing (behind the modal) */
+                <div className="w-full h-screen flex items-center justify-center">
+                    <div className="text-slate-300 animate-pulse text-sm font-mono tracking-widest">SYSTEM BUSY</div>
+                </div>
+             )
+        ) : (
+          /* RESULT VIEW (Only shows when status === 'success') */
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:p-8 animate-fade-in pb-12">
+            <div className="space-y-6">
+              
+              {/* SUCCESS HEADER - Replaces the huge analysis card */}
+              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                 <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                         <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                     </div>
+                     <div>
+                         <h2 className="text-sm font-bold text-slate-900">Analysis Complete</h2>
+                         <p className="text-[10px] sm:text-xs text-slate-500">{result?.issues.length} issues identified successfully.</p>
+                     </div>
+                 </div>
+                 <button 
+                    onClick={handleReset}
+                    className="text-xs font-bold text-slate-500 hover:text-blue-600 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                 >
+                    New Scan
+                 </button>
               </div>
               
               {/* Results Component */}
