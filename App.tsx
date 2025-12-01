@@ -345,13 +345,14 @@ const App: React.FC = () => {
              </div>
         ) : (
           /* RESULT VIEW (Only shows when status === 'success') */
-          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:p-8 animate-fade-in pb-12">
+          // Added 'pt-6' specifically for better mobile spacing from top
+          <div className="w-full max-w-7xl mx-auto px-3 pt-6 sm:px-6 lg:p-8 animate-fade-in pb-12">
             <div className="space-y-6">
               
               {/* SUCCESS HEADER - Replaces the huge analysis card */}
               <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                     <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                      </div>
                      <div>
