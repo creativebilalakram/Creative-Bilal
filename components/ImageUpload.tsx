@@ -100,7 +100,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
     <div 
       className={`
         relative group w-full 
-        min-h-[300px] sm:min-h-[420px] /* More compact on mobile */
+        min-h-[300px] sm:min-h-[420px] /* Compact height on mobile */
         rounded-[1.5rem] sm:rounded-[2.5rem]
         shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]
         p-[2px] overflow-hidden bg-slate-100
@@ -197,77 +197,75 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                             Drag & drop or select a photo to identify defects instantly.
                         </p>
 
-                        {/* --- SINGLE ROW BUTTONS LAYOUT --- */}
-                        <div className="flex flex-row items-stretch gap-2 sm:gap-4 w-full justify-center max-w-md mx-auto h-[48px] sm:h-[56px]">
+                        {/* --- SMART COMPACT MOBILE ROW LAYOUT --- */}
+                        <div className="flex flex-row items-stretch gap-1.5 sm:gap-3 w-full justify-center max-w-md mx-auto h-[50px] sm:h-[58px]">
                             
-                            {/* 1. Main Upload Button (Flex Grow) */}
+                            {/* 1. Main Upload Button (Dominant) */}
                             <button 
                                 onClick={() => inputRef.current?.click()}
                                 disabled={isLoading}
                                 className="
-                                flex-[2] sm:flex-none sm:w-auto
+                                flex-1
                                 group/btn relative overflow-hidden
                                 bg-gradient-to-br from-blue-600 to-indigo-600
                                 hover:from-blue-500 hover:to-indigo-500
-                                text-white px-2 sm:px-8 
+                                text-white px-3 sm:px-6 
                                 rounded-xl sm:rounded-2xl
-                                text-xs sm:text-base font-bold
+                                text-sm sm:text-base font-bold
                                 shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)]
                                 hover:shadow-[0_20px_30px_-5px_rgba(37,99,235,0.5)]
                                 transition-all duration-300 ease-out
                                 transform hover:-translate-y-1 active:scale-[0.98] active:translate-y-0
-                                flex items-center justify-center gap-2 sm:gap-3
+                                flex items-center justify-center gap-2
                                 "
                             >
-                                <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
-                                    <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    Upload<span className="hidden sm:inline"> Photo</span>
+                                <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-100" />
+                                <span className="relative z-10 whitespace-nowrap">
+                                    Upload<span className="inline"> Photo</span>
                                 </span>
                                 <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-in-out z-0"></div>
                             </button>
 
-                            {/* 2. Camera Button (Icon Only, Square-ish) */}
+                            {/* 2. Camera Button (Compact Square) */}
                             <button 
                                 onClick={() => cameraInputRef.current?.click()}
                                 disabled={isLoading}
                                 className="
-                                flex-shrink-0 w-[48px] sm:w-[56px]
-                                bg-white/50 backdrop-blur-sm
+                                flex-shrink-0 w-[50px] sm:w-[58px]
+                                bg-white
                                 border border-slate-200
                                 rounded-xl sm:rounded-2xl
                                 flex items-center justify-center
                                 text-slate-600 hover:text-blue-600
-                                shadow-[0_4px_10px_-2px_rgba(0,0,0,0.05)]
-                                hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)]
-                                hover:border-blue-200 hover:bg-white
+                                shadow-sm hover:shadow-md
+                                hover:border-blue-200
                                 transition-all duration-300
                                 transform hover:-translate-y-1 active:scale-[0.95]
                                 "
                                 aria-label="Take Photo"
                             >
-                                <Camera className="w-5 h-5" />
+                                <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
                             </button>
                             
-                            {/* 3. Link Button (Icon Only, Square-ish) */}
+                            {/* 3. Link Button (Compact Square) */}
                             <button 
                                 onClick={() => setShowUrlInput(true)}
                                 disabled={isLoading}
                                 className="
-                                flex-shrink-0 w-[48px] sm:w-[56px]
-                                bg-white/50 backdrop-blur-sm
+                                flex-shrink-0 w-[50px] sm:w-[58px]
+                                bg-white
                                 border border-slate-200
                                 rounded-xl sm:rounded-2xl
                                 flex items-center justify-center
                                 text-slate-600 hover:text-blue-600
-                                shadow-[0_4px_10px_-2px_rgba(0,0,0,0.05)]
-                                hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)]
-                                hover:border-blue-200 hover:bg-white
+                                shadow-sm hover:shadow-md
+                                hover:border-blue-200
                                 transition-all duration-300
                                 transform hover:-translate-y-1 active:scale-[0.95]
                                 "
                                 aria-label="Paste Link"
                             >
-                                <LinkIcon className="w-5 h-5" />
+                                <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                             </button>
                         </div>
 

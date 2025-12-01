@@ -12,7 +12,6 @@ export const Hero: React.FC<HeroProps> = ({ onImageSelected, isLoading }) => {
     <div className="relative pt-10 pb-12 sm:pt-12 sm:pb-16 md:pt-24 md:pb-32 overflow-hidden w-full">
       
       {/* Hero Content */}
-      {/* PADDING UPDATE: px-3 for mobile */}
       <div className="relative w-full max-w-[1400px] mx-auto px-3 sm:px-6 flex flex-col items-center text-center z-10">
         
         {/* Top Trust Badge */}
@@ -23,11 +22,12 @@ export const Hero: React.FC<HeroProps> = ({ onImageSelected, isLoading }) => {
           </span>
         </div>
 
-        {/* Headline */}
-        {/* FONT UPDATE: Smaller on mobile (4xl) to avoid breaking words */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-slate-900 mb-6 sm:mb-8 w-full animate-fade-in-up delay-100 leading-[1] px-1 drop-shadow-sm">
+        {/* Headline - Pro Level Typography */}
+        {/* Removed 'tracking-tighter', used 'tracking-tight' for better readability. */}
+        {/* Added specific spacing for the gradient text. */}
+        <h1 className="text-[2.75rem] leading-[1.1] sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 mb-6 sm:mb-8 w-full animate-fade-in-up delay-100 sm:leading-[1] px-1 drop-shadow-sm">
           Instant AI Building <br className="hidden sm:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 pb-1">Defect Scan</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 pb-1 tracking-normal">Defect Scan</span>
         </h1>
         
         <p className="text-base sm:text-xl text-slate-500 mb-10 sm:mb-14 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in-up delay-200 px-2 sm:px-4">
@@ -35,7 +35,6 @@ export const Hero: React.FC<HeroProps> = ({ onImageSelected, isLoading }) => {
         </p>
 
         {/* Upload Container - The Hero Element */}
-        {/* PADDING UPDATE: px-0 on mobile, wrapper handles it */}
         <div className="w-full max-w-2xl mx-auto animate-fade-in-up delay-300 mb-12 sm:mb-16 relative z-20 px-0 sm:px-0">
             {/* The "Killer" ImageUpload Card will go here */}
             <ImageUpload onImageSelected={onImageSelected} isLoading={isLoading} />
