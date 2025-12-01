@@ -100,10 +100,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
     <div 
       className={`
         relative group w-full 
-        min-h-[280px] sm:min-h-[420px] /* More compact on mobile */
+        min-h-[280px] sm:min-h-[420px]
         rounded-[1.5rem] sm:rounded-[2.5rem]
-        shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]
-        p-[2px] overflow-hidden bg-slate-100
+        shadow-[0_20px_60px_-12px_rgba(0,0,0,0.12),0_8px_24px_-8px_rgba(0,0,0,0.06)] 
+        p-[3px] overflow-hidden bg-slate-200
         flex flex-col 
         transition-all duration-500 ease-out
         ${dragActive ? 'scale-[1.01]' : ''}
@@ -113,20 +113,33 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
       onDragOver={handleDrag}
       onDrop={handleDrop}
     >
-        {/* --- SNAKE BORDER ANIMATION LAYERS --- */}
-        <div className="absolute inset-0 bg-slate-200/50" />
-        <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_90%,#94a3b8_95%,#e2e8f0_100%)] opacity-70 group-hover:opacity-0 transition-opacity duration-500" />
-        <div className="absolute inset-[-100%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#0000_92%,#3b82f6_98%,#ffffff_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* --- BORDER ANIMATIONS --- */}
+        <div className="absolute inset-0 bg-slate-200" />
+        <div className="absolute inset-[-100%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#e2e8f0_0%,#cbd5e1_50%,#e2e8f0_100%)] opacity-100 group-hover:opacity-0 transition-opacity duration-500" />
+        <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#0000_0%,#3b82f6_50%,#0000_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         {dragActive && (
              <div className="absolute inset-[-100%] animate-[spin_1.5s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#60a5fa_50%,#3b82f6_100%)] opacity-100 z-10" />
         )}
 
-        {/* --- INNER CARD CONTENT --- */}
-        <div className="relative flex-1 w-full h-full bg-white/95 backdrop-blur-3xl rounded-[1.4rem] sm:rounded-[2.4rem] flex flex-col justify-center overflow-hidden z-20">
+        {/* --- INNER CARD CONTENT WITH DEPTH --- */}
+        <div className="relative flex-1 w-full h-full rounded-[1.4rem] sm:rounded-[2.4rem] flex flex-col justify-center overflow-hidden z-20 bg-[#fafafa]">
             
-            {/* Soft Inner Glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+            {/* 1. Technical Grid Texture */}
+            <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-[0.4] pointer-events-none"></div>
 
+            {/* 2. Deep Inset Shadow (The "Tray" Effect) */}
+            <div className="absolute inset-0 shadow-[inset_0_2px_20px_rgba(0,0,0,0.02),inset_0_10px_40px_-10px_rgba(0,0,0,0.05)] rounded-[1.4rem] sm:rounded-[2.4rem] pointer-events-none"></div>
+
+            {/* 3. Top Highlight (Ambient Light) */}
+            <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-white to-transparent opacity-80 pointer-events-none"></div>
+
+            {/* 4. Bottom Shadow/Depth */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-slate-100/80 to-transparent pointer-events-none"></div>
+
+            {/* Soft Inner Glow on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+            {/* --- CONTENT LAYER --- */}
             <input ref={inputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" disabled={isLoading} />
             <input ref={cameraInputRef} type="file" className="hidden" onChange={handleChange} accept="image/*" capture="environment" disabled={isLoading} />
 
@@ -145,13 +158,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                             </div>
                         ) : (
                             <>
-                                {/* Animated layers for 3D feel */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/20 to-indigo-400/20 rounded-[2rem] blur-xl animate-pulse"></div>
-                                <div className="absolute inset-0 bg-white/80 rounded-[2rem] shadow-inner border border-white/50"></div>
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-[2rem] opacity-50"></div>
-                                
-                                <div className="relative w-full h-full flex items-center justify-center transform transition-transform duration-500 group-hover:rotate-6">
-                                    <Upload className="w-6 h-6 sm:w-10 sm:h-10 text-blue-600 drop-shadow-md" />
+                                {/* Floating Platform Shadow */}
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-2 bg-slate-300/50 rounded-[100%] blur-sm group-hover:w-12 group-hover:blur-md transition-all duration-500"></div>
+
+                                {/* Icon Container with Glassmorphism */}
+                                <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-tr from-white to-slate-50 rounded-2xl sm:rounded-[2rem] shadow-[0_8px_16px_-4px_rgba(0,0,0,0.05),inset_0_1px_2px_rgba(255,255,255,0.8)] border border-white">
+                                    <div className="absolute inset-0 bg-blue-50/30 rounded-2xl sm:rounded-[2rem]"></div>
+                                    <Upload className="w-6 h-6 sm:w-10 sm:h-10 text-blue-600 drop-shadow-md relative z-10" />
                                 </div>
                             </>
                         )}
@@ -170,7 +183,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 value={urlValue}
                                 onChange={(e) => setUrlValue(e.target.value)}
                                 placeholder="https://..."
-                                className="w-full pl-12 pr-12 py-3 sm:py-4 bg-white/60 border border-slate-200 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-sm"
+                                className="w-full pl-12 pr-12 py-3 sm:py-4 bg-white/80 border border-slate-200 rounded-2xl text-sm sm:text-base focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.03)]"
                                 disabled={isProcessingUrl}
                             />
                             <button 
@@ -190,7 +203,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                     </div>
                 ) : (
                     <>
-                        <h3 className="text-lg sm:text-3xl font-bold text-slate-900 mb-1.5 sm:mb-3 tracking-tight drop-shadow-sm">
+                        <h3 className="text-lg sm:text-3xl font-black text-slate-800 mb-1.5 sm:mb-3 tracking-tight drop-shadow-sm">
                             {isLoading ? 'Analyzing...' : 'Start Scan'}
                         </h3>
                         <p className="text-slate-500 text-[11px] sm:text-base mb-5 sm:mb-10 font-medium max-w-[220px] sm:max-w-[280px] mx-auto leading-relaxed">
@@ -212,7 +225,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 text-white px-3 sm:px-6 
                                 rounded-xl sm:rounded-2xl
                                 text-xs sm:text-base font-bold
-                                shadow-[0_8px_15px_-5px_rgba(37,99,235,0.4)]
+                                shadow-[0_8px_20px_-5px_rgba(37,99,235,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]
                                 hover:shadow-[0_15px_25px_-5px_rgba(37,99,235,0.5)]
                                 transition-all duration-300 ease-out
                                 transform hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0
@@ -236,7 +249,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 rounded-xl sm:rounded-2xl
                                 flex items-center justify-center
                                 text-slate-600 hover:text-blue-600
-                                shadow-sm hover:shadow-md
+                                shadow-[0_2px_5px_rgba(0,0,0,0.05)]
+                                hover:shadow-md
                                 hover:border-blue-200
                                 transition-all duration-300
                                 transform hover:-translate-y-0.5 active:scale-[0.95]
@@ -257,7 +271,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isLoa
                                 rounded-xl sm:rounded-2xl
                                 flex items-center justify-center
                                 text-slate-600 hover:text-blue-600
-                                shadow-sm hover:shadow-md
+                                shadow-[0_2px_5px_rgba(0,0,0,0.05)]
+                                hover:shadow-md
                                 hover:border-blue-200
                                 transition-all duration-300
                                 transform hover:-translate-y-0.5 active:scale-[0.95]
