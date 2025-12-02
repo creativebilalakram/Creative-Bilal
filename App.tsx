@@ -172,9 +172,8 @@ const App: React.FC = () => {
   };
 
   return (
-    // CRITICAL FIX: Removed 'min-h-screen' to prevent infinite loop with iframe resizer. 
-    // Used 'h-auto' and 'w-full' to let content dictate height naturally.
-    <div className="w-full h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-hidden">
+    // FIX: Changed 'overflow-hidden' to 'overflow-x-hidden' to allow vertical scrolling
+    <div className="w-full min-h-screen h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
