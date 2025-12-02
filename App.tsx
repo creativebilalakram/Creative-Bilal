@@ -26,46 +26,44 @@ const App: React.FC = () => {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStepIndex, setScanStepIndex] = useState(0);
 
-  // --- IFRAME RESIZER LOGIC (STABILIZED) ---
+  // --- IFRAME RESIZER LOGIC (WORDPRESS COMPATIBILITY) ---
   useEffect(() => {
-    let lastHeight = 0;
-    
+    // Function specifically requested for Vercel/WordPress Embedding
     const sendHeight = () => {
-      const rootElement = document.getElementById('root');
-      if (rootElement) {
-        // Use scrollHeight to capture full content height
-        // We add a minimal fixed buffer (10px) for bottom breathing room
-        const height = rootElement.scrollHeight + 10;
-        
-        // Only send update if height changed by more than 2px to prevent infinite micro-adjustments
-        // This stops the "growing" bug where iframe resize triggers content resize triggers iframe resize...
-        if (Math.abs(height - lastHeight) > 2) {
-            lastHeight = height;
-            window.parent.postMessage({ type: 'setHeight', height: height }, '*');
-        }
-      }
+      // We calculate the maximum scroll height to ensure no content is cut off
+      const bodyHeight = document.body.scrollHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      const height = Math.max(bodyHeight, docHeight);
+      
+      // Send the height to the parent window
+      window.parent.postMessage({ type: "setHeight", height: height }, "*");
     };
 
-    // Initial sizing
+    // Observers to detect any DOM changes (like AI text streaming in)
+    const resizeObserver = new ResizeObserver(() => sendHeight());
+    resizeObserver.observe(document.body);
+    
+    // Also observe root for specific React changes
+    const root = document.getElementById('root');
+    if(root) resizeObserver.observe(root);
+
+    // Standard Events
+    window.addEventListener('load', sendHeight);
+    window.addEventListener('resize', sendHeight);
+    
+    // Fallback Interval (Checks every 1s)
+    const interval = setInterval(sendHeight, 1000);
+
+    // Initial send
     sendHeight();
 
-    // Use ResizeObserver for efficient, event-driven updates
-    const resizeObserver = new ResizeObserver(() => {
-        sendHeight();
-    });
-    
-    const rootEl = document.getElementById('root');
-    if (rootEl) resizeObserver.observe(rootEl);
-    
-    // Backup interval (slower) to catch any layout shifts missed by observer
-    // but checks the same condition to avoid loops
-    const interval = setInterval(sendHeight, 1000);
-    
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('load', sendHeight);
+      window.removeEventListener('resize', sendHeight);
       clearInterval(interval);
     };
-  }, [result, loadingState, scanStepIndex, previewUrl]); 
+  }, [result, loadingState]); // Re-bind if major state changes to be safe
 
   useEffect(() => {
     let progressInterval: ReturnType<typeof setInterval>;
@@ -172,8 +170,8 @@ const App: React.FC = () => {
   };
 
   return (
-    // FIX: Changed 'overflow-hidden' to 'overflow-x-hidden' to allow vertical scrolling
-    <div className="w-full min-h-screen h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
+    // FIX: Changed to min-h-screen to allow natural height growth for iframes
+    <div className="w-full min-h-screen font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
       <style>{`
         @keyframes scan-line {
           0% { top: 0%; opacity: 0; }
