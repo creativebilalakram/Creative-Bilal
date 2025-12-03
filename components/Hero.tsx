@@ -38,13 +38,6 @@ export const Hero: React.FC<HeroProps> = ({ onImageSelected, isLoading }) => {
                     Creative Build <span className="text-indigo-600">AI</span>
                  </span>
              </div>
-             
-             {/* Tagline Separator and Text */}
-             <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1"></div>
-             
-             <span className="text-sm sm:text-lg font-medium text-slate-500 whitespace-nowrap mt-2 sm:mt-0">
-                | Creative Bilal Solution
-             </span>
         </div>
 
         {/* --- HEADLINE --- */}
