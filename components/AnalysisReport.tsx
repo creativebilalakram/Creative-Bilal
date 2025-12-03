@@ -86,7 +86,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
             // Branding
             setText(colors.white);
             setFont('bold', 14);
-            doc.text("AusBuild Inspect AI", margin, 11);
+            doc.text("Creative Build AI", margin, 11);
             
             setFont('normal', 8);
             setText(colors.textGray);
@@ -327,11 +327,11 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
             // Text
             setFont('normal', 7);
             setText(colors.textGray);
-            doc.text(`AusBuild Inspect AI Generated Report`, margin, pageHeight - 7);
+            doc.text(`Creative Build AI Generated Report`, margin, pageHeight - 7);
             doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
         }
 
-        doc.save(`AusBuild-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+        doc.save(`CreativeBuild-Report-${new Date().toISOString().slice(0,10)}.pdf`);
     } catch (e) {
         console.error("PDF Generation Error", e);
         alert("Failed to generate PDF. Please try again.");

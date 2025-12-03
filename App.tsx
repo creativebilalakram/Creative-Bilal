@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
 import { AnalysisResult, LoadingState } from './types';
-import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Server, Cpu, Radio, Shield, Zap, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Shield, RefreshCw, Cpu, Signal } from 'lucide-react';
 
 const SCAN_STEPS = [
   "INITIALIZING_VISION_MODELS",
@@ -26,19 +26,14 @@ const App: React.FC = () => {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStepIndex, setScanStepIndex] = useState(0);
 
-  // --- IFRAME RESIZER LOGIC (STABILIZED) ---
+  // --- IFRAME RESIZER LOGIC ---
   useEffect(() => {
     let lastHeight = 0;
     
     const sendHeight = () => {
       const rootElement = document.getElementById('root');
       if (rootElement) {
-        // Use scrollHeight to capture full content height
-        // We add a minimal fixed buffer (10px) for bottom breathing room
         const height = rootElement.scrollHeight + 10;
-        
-        // Only send update if height changed by more than 2px to prevent infinite micro-adjustments
-        // This stops the "growing" bug where iframe resize triggers content resize triggers iframe resize...
         if (Math.abs(height - lastHeight) > 2) {
             lastHeight = height;
             window.parent.postMessage({ type: 'setHeight', height: height }, '*');
@@ -46,21 +41,11 @@ const App: React.FC = () => {
       }
     };
 
-    // Initial sizing
     sendHeight();
-
-    // Use ResizeObserver for efficient, event-driven updates
-    const resizeObserver = new ResizeObserver(() => {
-        sendHeight();
-    });
-    
+    const resizeObserver = new ResizeObserver(() => { sendHeight(); });
     const rootEl = document.getElementById('root');
     if (rootEl) resizeObserver.observe(rootEl);
-    
-    // Backup interval (slower) to catch any layout shifts missed by observer
-    // but checks the same condition to avoid loops
     const interval = setInterval(sendHeight, 1000);
-    
     return () => {
       resizeObserver.disconnect();
       clearInterval(interval);
@@ -78,7 +63,7 @@ const App: React.FC = () => {
       progressInterval = setInterval(() => {
         setScanProgress(prev => {
            if (prev >= 98) return prev;
-           return prev + (Math.random() * 4); // Faster, smoother progress
+           return prev + (Math.random() * 4); 
         });
       }, 100);
 
@@ -143,8 +128,6 @@ const App: React.FC = () => {
     setLoadingState({ status: 'analyzing', message: 'Scanning image for defects...' });
     setResult(null);
     setBase64Data(null);
-    
-    // Smooth scroll to top to ensure modal is centered in view
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
@@ -172,74 +155,75 @@ const App: React.FC = () => {
   };
 
   return (
-    // FIX: Changed 'overflow-hidden' to 'overflow-x-hidden' to allow vertical scrolling
     <div className="w-full min-h-screen h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
       <style>{`
-        @keyframes scan-line {
-          0% { top: 0%; opacity: 0; }
-          100% { top: 100%; opacity: 0; }
-        }
         @keyframes scan-vertical {
             0% { top: 0%; opacity: 0; }
             15% { opacity: 1; box-shadow: 0 0 15px rgba(59,130,246,0.9); }
             85% { opacity: 1; box-shadow: 0 0 15px rgba(59,130,246,0.9); }
             100% { top: 100%; opacity: 0; }
         }
+        @keyframes fade-in-up {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes text-shine {
+            0% { background-position: 200% center; }
+            100% { background-position: 0% center; }
+        }
         .animate-scan-vertical {
             animation: scan-vertical 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
-        .bg-grid-clean {
-           background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px);
-           background-size: 40px 40px;
+        .animate-fade-in-up {
+            animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; /* Start hidden */
         }
-        /* Dark Technical Grid for Modal */
+        .animate-text-shine {
+            background-size: 200% auto;
+            animation: text-shine 3s linear infinite;
+        }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-500 { animation-delay: 500ms; }
+        .delay-700 { animation-delay: 700ms; }
+
+        .bg-grid-engineering {
+           background-size: 40px 40px;
+           background-image:
+             linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+             linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+        }
+        
         .bg-grid-tech {
            background-image: linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
            background-size: 20px 20px;
         }
-        .bg-noise {
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-        }
       `}</style>
       
-      {/* Background Layers */}
-      <div className="fixed inset-0 bg-grid-clean z-0 pointer-events-none opacity-[0.15]"></div>
-      <div className="fixed inset-0 bg-noise z-0 pointer-events-none opacity-40 mix-blend-overlay"></div>
+      {/* Background Layers - Engineering Graph Paper Effect */}
+      <div className="fixed inset-0 bg-[#f8fafc] z-0"></div>
+      <div className="fixed inset-0 bg-grid-engineering z-0 pointer-events-none"></div>
+      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-white/50 to-white/90 z-0 pointer-events-none"></div>
       
-      {/* Glow Orbs */}
-      <div className="fixed top-[-10%] left-[20%] w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="fixed bottom-[-10%] right-[10%] w-[400px] h-[400px] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-      {/* --- OVERLAY MODAL FOR ANALYSIS (CENTERED) --- */}
+      {/* --- OVERLAY MODAL FOR ANALYSIS --- */}
       {(loadingState.status === 'analyzing' || loadingState.status === 'error') && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fade-in h-[100dvh]">
-            
-            {/* The KILLER CARD */}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-fade-in h-[100dvh]">
             <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-[0_0_80px_-20px_rgba(59,130,246,0.6)] relative transform transition-all">
-                
                 {/* Decoration Lines */}
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60"></div>
                 <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-60"></div>
                 
-                {/* Card Content Grid - Fixed Height to prevent Jitter */}
                 <div className="flex flex-col md:flex-row h-[420px] md:h-[320px]">
-                    
-                    {/* Left/Top: Image Sensor */}
+                    {/* Left: Image Sensor */}
                     <div className="relative w-full h-[180px] md:h-full md:w-5/12 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
-                        {/* Background Grid */}
                         <div className="absolute inset-0 bg-grid-tech"></div>
-                        
-                        {/* The Image */}
                         <img 
                           src={previewUrl!} 
                           alt="Target" 
                           className="w-full h-full object-cover opacity-60 mix-blend-overlay contrast-125 saturate-0 group-hover:saturate-50 transition-all duration-500" 
                         />
-                        
-                        {/* Scanner Beam */}
                         <div className="absolute left-0 w-full h-[2px] bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,1)] animate-scan-vertical z-20"></div>
-
-                        {/* HUD Elements */}
                         <div className="absolute top-3 left-3 flex items-center gap-1.5 z-30">
                             <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
                             <span className="text-[10px] font-mono font-bold text-red-400 tracking-widest uppercase">REC_Active</span>
@@ -247,48 +231,38 @@ const App: React.FC = () => {
                         <div className="absolute bottom-3 right-3 z-30">
                              <ScanLine className="w-5 h-5 text-blue-500/80 drop-shadow-[0_0_5px_rgba(59,130,246,0.8)]" />
                         </div>
-                        
-                        {/* Corner Brackets */}
-                        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-500/30"></div>
-                        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-500/30"></div>
                     </div>
 
-                    {/* Right/Bottom: Data Console */}
+                    {/* Right: Data Console */}
                     <div className="flex-1 p-5 md:p-6 flex flex-col justify-between bg-slate-950 relative">
-                        
-                        {/* Header */}
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <div className="p-1 rounded bg-blue-500/10 border border-blue-500/20">
-                                      <Shield className="w-3.5 h-3.5 text-blue-500" />
+                                      <Cpu className="w-3.5 h-3.5 text-blue-500" />
                                     </div>
-                                    <h3 className="text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-[0.2em] shadow-blue-500/50">AusBuild Core</h3>
+                                    <h3 className="text-[10px] md:text-xs font-bold text-blue-100 uppercase tracking-[0.2em] shadow-blue-500/50">Creative Build Core</h3>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                   <span className="text-[9px] font-mono text-slate-500">ONLINE</span>
+                                   <Signal className="w-3 h-3 text-emerald-500" />
+                                   <span className="text-[9px] font-mono text-slate-500">LOW_LATENCY</span>
                                 </div>
                             </div>
-                            
                             <div className="h-[1px] w-full bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 mb-5"></div>
-                        
-                            {/* Dynamic Text Console - Fixed Height Wrapper to Stop Jitter */}
                             <div className="h-[90px] mb-2 flex flex-col justify-center space-y-3">
                                 <div className="flex items-start gap-3">
                                     <Activity className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Process Node</p>
+                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Current Operation</p>
                                         <p className="text-[11px] md:text-xs font-mono text-blue-400 font-bold truncate tracking-wide">
                                             {loadingState.status === 'error' ? 'SYSTEM_FAILURE' : SCAN_STEPS[scanStepIndex]}
                                         </p>
                                     </div>
                                 </div>
-
                                 <div className="flex items-start gap-3">
                                     <Database className="w-3.5 h-3.5 text-slate-600 mt-0.5 shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Reference Lib</p>
+                                        <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1">Standard Reference</p>
                                         <p className="text-[10px] md:text-xs font-mono text-slate-300 tracking-wide">
                                             NCC_AU_STANDARDS_2025.JSON
                                         </p>
@@ -297,7 +271,6 @@ const App: React.FC = () => {
                             </div>
                         </div>
                         
-                        {/* Error Message if Any */}
                         {loadingState.status === 'error' && (
                             <div className="absolute inset-0 z-40 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center">
                                 <AlertTriangle className="w-8 h-8 text-red-500 mb-3" />
@@ -308,7 +281,6 @@ const App: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Progress Section */}
                         <div className="mt-auto pt-4 border-t border-slate-800/50">
                              <div className="flex justify-between items-end mb-2">
                                  <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1.5">
@@ -322,11 +294,9 @@ const App: React.FC = () => {
                                     className="h-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] transition-all duration-150 relative z-10"
                                     style={{ width: `${Math.max(5, scanProgress)}%` }}
                                  ></div>
-                                 {/* Progress Glitch Effect */}
                                  <div className="absolute top-0 bottom-0 bg-white/20 w-full animate-pulse z-0" style={{ left: '-100%' }}></div>
                              </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -334,21 +304,13 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-grow flex flex-col relative z-10">
-        
-        {/* Main Content Area */}
         {!previewUrl || loadingState.status === 'analyzing' ? (
-             // Show Hero initially OR if analyzing (Background stays visible behind modal)
-             // This prevents the black background issue
              <div className={loadingState.status === 'analyzing' ? 'blur-sm grayscale opacity-30 pointer-events-none transition-all duration-1000' : ''}>
                 <Hero onImageSelected={handleImageSelected} isLoading={false} />
              </div>
         ) : (
-          /* RESULT VIEW (Only shows when status === 'success') */
-          // Added 'pt-6' specifically for better mobile spacing from top
           <div className="w-full max-w-7xl mx-auto px-3 pt-6 sm:px-6 lg:p-8 animate-fade-in pb-12">
             <div className="space-y-6">
-              
-              {/* SUCCESS HEADER - Replaces the huge analysis card */}
               <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
                  <div className="flex items-center gap-3">
                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
@@ -366,14 +328,11 @@ const App: React.FC = () => {
                     New Scan
                  </button>
               </div>
-              
-              {/* Results Component */}
               {result && (
                 <div id="report-section">
                   <AnalysisReport data={result} onReset={handleReset} previewUrl={previewUrl} base64Image={base64Data} />
                 </div>
               )}
-              
             </div>
           </div>
         )}
