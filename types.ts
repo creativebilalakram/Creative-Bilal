@@ -23,6 +23,19 @@ export interface LeadProfile {
   suburb: string;
   propertyType: string;
   urgency: string;
+  
+  // --- Pro Level Meta Data (Tech) ---
+  userAgent?: string;       // Browser & OS info
+  screenResolution?: string;// Device screen size
+  language?: string;        // User's system language
+  timezone?: string;        // User's local timezone
+  referrer?: string;        // Where they came from
+  platform?: string;        // OS Platform (Win, Mac, Android)
+
+  // --- Personalized Targeting Data (Defect Context) ---
+  severityScore?: number;    // e.g., 85 (High urgency lead)
+  detectedDefects?: string;  // e.g., "Structural Cracks, Water Damage"
+  analysisSummary?: string;  // Short AI summary of the problem
 }
 
 export interface LoadingState {
