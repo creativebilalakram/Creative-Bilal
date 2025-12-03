@@ -24,16 +24,27 @@ export const Hero: React.FC<HeroProps> = ({ onImageSelected, isLoading }) => {
       <div className="relative w-full max-w-[1400px] mx-auto px-4 sm:px-6 flex flex-col items-center text-center z-10">
         
         {/* --- LOGO SECTION (PNG with White Box & Shadow) --- */}
-        <div className="flex items-center gap-3 mb-10 animate-fade-in-up">
-             {/* The Logo Container - Solid White, Slight Popout Shadow */}
-             <div className="bg-white p-2 rounded-xl shadow-lg shadow-slate-900/5 border border-slate-100">
-                <img 
-                    src="https://creativebilal.com/wp-content/uploads/2025/12/Black-Blue-Minimalist-Modern-Initial-Font-Logo.png" 
-                    alt="Creative Build AI Logo" 
-                    className="w-10 h-10 object-contain"
-                />
+        <div className="flex flex-col sm:flex-row items-center gap-3 mb-10 animate-fade-in-up">
+             <div className="flex items-center gap-3">
+                 {/* The Logo Container - Solid White, Slight Popout Shadow */}
+                 <div className="bg-white p-2 rounded-xl shadow-lg shadow-slate-900/5 border border-slate-100">
+                    <img 
+                        src="https://creativebilal.com/wp-content/uploads/2025/12/Black-Blue-Minimalist-Modern-Initial-Font-Logo.png" 
+                        alt="Creative Build AI Logo" 
+                        className="w-10 h-10 object-contain"
+                    />
+                 </div>
+                 <span className="font-bold text-slate-900 tracking-tight text-xl sm:text-2xl whitespace-nowrap">
+                    Creative Build <span className="text-indigo-600">AI</span>
+                 </span>
              </div>
-             <span className="font-bold text-slate-900 tracking-tight text-xl sm:text-2xl">Creative Build <span className="text-indigo-600">AI</span></span>
+             
+             {/* Tagline Separator and Text */}
+             <div className="hidden sm:block w-px h-6 bg-slate-300 mx-1"></div>
+             
+             <span className="text-sm sm:text-lg font-medium text-slate-500 whitespace-nowrap mt-2 sm:mt-0">
+                | Creative Bilal Solution
+             </span>
         </div>
 
         {/* --- HEADLINE --- */}
