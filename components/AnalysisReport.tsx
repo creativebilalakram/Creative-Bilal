@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnalysisResult, LeadProfile } from '../types';
 import { CheckCircle, ArrowRight, Download, FileText, Activity, AlertOctagon, TrendingUp, Layers } from 'lucide-react';
 import { LeadForm } from './LeadForm';
@@ -29,6 +29,33 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
   });
   
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // --- SCORE ANIMATION STATE ---
+  const [animatedScore, setAnimatedScore] = useState(0);
+
+  useEffect(() => {
+    // Reset start
+    setAnimatedScore(0);
+    
+    const target = data.severityScore;
+    const duration = 2000; // 2 seconds total animation
+    const frames = 60; // 60 updates total
+    const intervalTime = duration / frames;
+    const increment = target / frames;
+
+    let current = 0;
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            setAnimatedScore(target);
+            clearInterval(timer);
+        } else {
+            setAnimatedScore(Math.floor(current));
+        }
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [data.severityScore]);
 
   const handleUnlock = (profile: LeadProfile) => {
     console.log("Lead captured:", profile);
@@ -340,6 +367,36 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
     }
   };
 
+  // Determine dynamic colors based on ANIMATED score
+  const getDynamicColor = (score: number) => {
+      if (score > 70) return { 
+          text: 'text-red-500', 
+          bg: 'bg-red-500/10', 
+          border: 'border-red-500/20', 
+          shadow: 'shadow-red-500/20',
+          stopColor: '#ef4444',
+          label: 'Critical Attention' 
+      };
+      if (score > 40) return { 
+          text: 'text-orange-500', 
+          bg: 'bg-orange-500/10', 
+          border: 'border-orange-500/20', 
+          shadow: 'shadow-orange-500/20',
+          stopColor: '#f97316',
+          label: 'Moderate Risk'
+      };
+      return { 
+          text: 'text-emerald-500', 
+          bg: 'bg-emerald-500/10', 
+          border: 'border-emerald-500/20', 
+          shadow: 'shadow-emerald-500/20',
+          stopColor: '#10b981',
+          label: 'Low Risk'
+      };
+  };
+
+  const dynamicStyle = getDynamicColor(animatedScore);
+
   return (
     <div className="w-full pb-12">
       
@@ -408,28 +465,23 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({ data, onReset, p
                         strokeWidth="12" 
                         strokeLinecap="round" 
                         strokeDasharray="251.2" 
-                        strokeDashoffset={251.2 * (1 - data.severityScore / 100)}
+                        strokeDashoffset={251.2 * (1 - animatedScore / 100)}
                         filter="url(#glow)"
-                        className="transition-all duration-1500 ease-out"
-                        style={{ transitionProperty: 'stroke-dashoffset' }}
+                        className="transition-[stroke-dashoffset] duration-75 ease-linear" 
                     />
                 </svg>
 
                 {/* Center Value */}
                 <div className="absolute bottom-0 left-0 w-full text-center transform translate-y-1">
-                     <div className="text-4xl sm:text-5xl font-black tracking-tighter text-white drop-shadow-2xl">
-                        {data.severityScore}
+                     <div className="text-4xl sm:text-5xl font-black tracking-tighter text-white drop-shadow-2xl tabular-nums">
+                        {animatedScore}
                         <span className="text-[10px] sm:text-xs font-medium text-slate-500 align-top ml-1 relative top-1">/100</span>
                      </div>
                 </div>
              </div>
              
-             <div className={`mt-3 px-4 py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm ${
-                data.severityScore > 70 ? 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.25)]' : 
-                data.severityScore > 40 ? 'bg-orange-500/10 border-orange-500/20 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.25)]' : 
-                'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-             }`}>
-                {data.severityScore > 70 ? 'Critical Attention' : data.severityScore > 40 ? 'Moderate Risk' : 'Low Risk'}
+             <div className={`mt-3 px-4 py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm transition-colors duration-300 ${dynamicStyle.bg} ${dynamicStyle.border} ${dynamicStyle.text} shadow-[0_0_15px_rgba(0,0,0,0.2)]`}>
+                {dynamicStyle.label}
              </div>
          </div>
       </div>

@@ -56,7 +56,7 @@ export const analyzeBuildingImage = async (base64Image: string, mimeType: string
     Your task is to analyze the provided image and return a structured assessment.
     
     For the 'Quick Scan' portion (summary, severityScore, topCategories):
-    - Provide a 0-100 severity score based on the visual risk.
+    - Provide a specific 0-100 severity score based on the visual risk. DO NOT use round numbers (e.g. use 72 or 84, not 70 or 80) to ensure accuracy.
     - Identify the top categories immediately visible.
     
     For the 'Full Report' portion (issues, nextSteps):
