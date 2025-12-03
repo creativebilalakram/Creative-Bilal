@@ -3,7 +3,7 @@ import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
 import { AnalysisResult, LoadingState } from './types';
-import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Shield, RefreshCw, Cpu, Signal } from 'lucide-react';
+import { AlertTriangle, Database, CheckCircle2, ScanLine, Activity, Shield, RefreshCw, Cpu, Signal, Zap } from 'lucide-react';
 
 const SCAN_STEPS = [
   "INITIALIZING_VISION_MODELS",
@@ -16,7 +16,104 @@ const SCAN_STEPS = [
   "FINALIZING_REPORT_OUTPUT"
 ];
 
+// --- INTRO ANIMATION COMPONENT ---
+const IntroOverlay = ({ onComplete }: { onComplete: () => void }) => {
+  const [loadingText, setLoadingText] = useState("INITIALIZING SYSTEM...");
+  const [progress, setProgress] = useState(0);
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    // Progress Bar Animation
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 2; // Speed of loader
+      });
+    }, 30);
+
+    // Text Cycling
+    const textTimers = [
+      setTimeout(() => setLoadingText("CONNECTING TO NEURAL NET..."), 600),
+      setTimeout(() => setLoadingText("CALIBRATING OPTICAL SENSORS..."), 1200),
+      setTimeout(() => setLoadingText("LOADING AUSTRALIAN STANDARDS..."), 1800),
+      setTimeout(() => setLoadingText("SYSTEM READY."), 2400),
+    ];
+
+    // Exit Trigger
+    const exitTimer = setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(onComplete, 800); // Wait for exit animation to finish before unmounting
+    }, 2600);
+
+    return () => {
+      clearInterval(interval);
+      textTimers.forEach(clearTimeout);
+      clearTimeout(exitTimer);
+    };
+  }, [onComplete]);
+
+  return (
+    <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-all duration-700 ${isExiting ? 'pointer-events-none' : ''}`}>
+      
+      {/* Top Curtain (White) */}
+      <div className={`absolute top-0 left-0 w-full h-[50vh] bg-slate-900 border-b border-slate-800 z-10 flex items-end justify-center pb-10 transition-transform duration-700 ease-in-out ${isExiting ? '-translate-y-full' : 'translate-y-0'}`}>
+         {/* Background Grid */}
+         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
+      </div>
+
+      {/* Bottom Curtain (White) */}
+      <div className={`absolute bottom-0 left-0 w-full h-[50vh] bg-slate-900 border-t border-slate-800 z-10 flex items-start justify-center pt-10 transition-transform duration-700 ease-in-out ${isExiting ? 'translate-y-full' : 'translate-y-0'}`}>
+         {/* Background Grid */}
+         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
+      </div>
+
+      {/* CENTER CONTENT (Floats on top of curtains) */}
+      <div className={`relative z-20 flex flex-col items-center transition-all duration-500 ${isExiting ? 'opacity-0 scale-150 blur-sm' : 'opacity-100 scale-100'}`}>
+        
+        {/* Logo Container */}
+        <div className="bg-white p-4 rounded-2xl shadow-[0_0_50px_rgba(79,70,229,0.4)] mb-8 animate-pulse">
+            <img 
+                src="https://creativebilal.com/wp-content/uploads/2025/12/Black-Blue-Minimalist-Modern-Initial-Font-Logo.png" 
+                alt="Logo" 
+                className="w-16 h-16 object-contain"
+            />
+        </div>
+
+        {/* Text */}
+        <h1 className="text-2xl font-black text-white tracking-widest uppercase mb-2">
+            Creative Build <span className="text-blue-500">AI</span>
+        </h1>
+        <p className="font-mono text-blue-400 text-xs tracking-[0.2em] mb-6 h-4">
+            {loadingText}
+        </p>
+
+        {/* Loader Bar */}
+        <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden relative">
+            <div 
+                className="h-full bg-blue-500 shadow-[0_0_15px_#3b82f6]" 
+                style={{ width: `${progress}%`, transition: 'width 0.1s linear' }}
+            ></div>
+        </div>
+
+        {/* Tech Decor */}
+        <div className="absolute -left-20 top-1/2 -translate-y-1/2 hidden sm:block">
+            <div className="w-1 h-16 bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
+        </div>
+        <div className="absolute -right-20 top-1/2 -translate-y-1/2 hidden sm:block">
+             <div className="w-1 h-16 bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+
 const App: React.FC = () => {
+  const [showIntro, setShowIntro] = useState(true);
   const [loadingState, setLoadingState] = useState<LoadingState>({ status: 'idle' });
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -201,6 +298,9 @@ const App: React.FC = () => {
         }
       `}</style>
       
+      {/* --- INTRO OVERLAY --- */}
+      {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
+
       {/* Background Layers - Engineering Graph Paper Effect */}
       <div className="fixed inset-0 bg-[#f8fafc] z-0"></div>
       <div className="fixed inset-0 bg-grid-engineering z-0 pointer-events-none"></div>
