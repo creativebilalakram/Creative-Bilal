@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Hero } from './components/Hero';
 import { AnalysisReport } from './components/AnalysisReport';
 import { analyzeBuildingImage } from './services/geminiService';
@@ -108,6 +108,69 @@ const IntroOverlay = ({ onComplete }: { onComplete: () => void }) => {
       </div>
 
     </div>
+  );
+};
+
+// --- DYNAMIC GRID ANIMATION COMPONENT ---
+interface Snake {
+  id: number;
+  type: 'h' | 'v';
+  pos: number;
+  duration: number;
+}
+
+const GridAnimations = () => {
+  const [snakes, setSnakes] = useState<Snake[]>([]);
+
+  useEffect(() => {
+    // Spawner Interval
+    const interval = setInterval(() => {
+      // Limit total active snakes to avoid DOM overload
+      setSnakes(prev => {
+        if (prev.length > 25) return prev; // Wait for some to finish
+
+        const isHorizontal = Math.random() > 0.45; // Slight bias
+        const gridSize = 60; // Must match background-size
+        
+        // Calculate boundaries
+        const maxPos = isHorizontal 
+          ? window.innerHeight 
+          : window.innerWidth;
+        
+        // Pick a random grid line index
+        const lineIndex = Math.floor(Math.random() * (maxPos / gridSize));
+        const pos = lineIndex * gridSize;
+
+        return [...prev, {
+          id: Date.now() + Math.random(),
+          type: isHorizontal ? 'h' : 'v',
+          pos: pos,
+          duration: 3 + Math.random() * 5 // 3s to 8s duration
+        }];
+      });
+    }, 400); // Spawn new snake every 400ms
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const removeSnake = useCallback((id: number) => {
+    setSnakes(prev => prev.filter(s => s.id !== id));
+  }, []);
+
+  return (
+    <>
+      {snakes.map(snake => (
+        <div
+          key={snake.id}
+          className={snake.type === 'h' ? 'grid-snake-h' : 'grid-snake-v'}
+          style={{
+            [snake.type === 'h' ? 'top' : 'left']: `${snake.pos}px`,
+            animationDuration: `${snake.duration}s`,
+          }}
+          onAnimationEnd={() => removeSnake(snake.id)}
+        />
+      ))}
+    </>
   );
 };
 
@@ -254,6 +317,7 @@ const App: React.FC = () => {
   return (
     <div className="w-full min-h-screen h-auto font-sans text-slate-900 bg-[#f8fafc] selection:bg-blue-100 flex flex-col relative overflow-x-hidden">
       <style>{`
+        /* --- CORE ANIMATIONS --- */
         @keyframes scan-vertical {
             0% { top: 0%; opacity: 0; }
             15% { opacity: 1; box-shadow: 0 0 15px rgba(59,130,246,0.9); }
@@ -268,43 +332,109 @@ const App: React.FC = () => {
             0% { background-position: 200% center; }
             100% { background-position: 0% center; }
         }
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        
+        /* --- PREMIUM GRID BACKGROUND --- */
+        .bg-grid-tech-premium {
+           background-size: 60px 60px;
+           background-image:
+             linear-gradient(to right, rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+             linear-gradient(to bottom, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+        }
+
+        /* --- DYNAMIC SNAKE ANIMATIONS --- */
+        .grid-snake-h {
+            position: absolute;
+            left: -100%;
+            height: 1px; /* Matches grid line width */
+            width: 30%; /* Length of the tail */
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), #fff, rgba(99, 102, 241, 0.2), transparent);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+            animation: snake-h-run linear forwards;
+            opacity: 0.6;
+            z-index: 0;
+            will-change: left;
+        }
+
+        @keyframes snake-h-run {
+            0% { left: -30%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        .grid-snake-v {
+            position: absolute;
+            top: -100%;
+            width: 1px; /* Matches grid line width */
+            height: 30%;
+            background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.2), #fff, rgba(59, 130, 246, 0.2), transparent);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+            animation: snake-v-run linear forwards;
+            opacity: 0.6;
+            z-index: 0;
+            will-change: top;
+        }
+
+        @keyframes snake-v-run {
+            0% { top: -30%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* --- UTILS --- */
         .animate-scan-vertical {
             animation: scan-vertical 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
         .animate-fade-in-up {
             animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0; /* Start hidden */
+            opacity: 0;
         }
         .animate-text-shine {
             background-size: 200% auto;
             animation: text-shine 3s linear infinite;
         }
+        .animate-blob {
+            animation: blob 15s infinite;
+        }
+        
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
         .delay-500 { animation-delay: 500ms; }
-        .delay-700 { animation-delay: 700ms; }
-
-        .bg-grid-engineering {
-           background-size: 40px 40px;
-           background-image:
-             linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
-             linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px);
-        }
         
-        .bg-grid-tech {
-           background-image: linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
-           background-size: 20px 20px;
-        }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
       `}</style>
       
       {/* --- INTRO OVERLAY --- */}
       {showIntro && <IntroOverlay onComplete={() => setShowIntro(false)} />}
 
-      {/* Background Layers - Engineering Graph Paper Effect */}
-      <div className="fixed inset-0 bg-[#f8fafc] z-0"></div>
-      <div className="fixed inset-0 bg-grid-engineering z-0 pointer-events-none"></div>
-      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-white/50 to-white/90 z-0 pointer-events-none"></div>
+      {/* --- PREMIUM DYNAMIC BACKGROUND --- */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          
+          {/* 1. Base Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-slate-100 to-[#f1f5f9]"></div>
+
+          {/* 2. Floating Ambient Energy (Blobs) */}
+          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-blue-500/5 rounded-full blur-[120px] animate-blob mix-blend-multiply"></div>
+          <div className="absolute top-[30%] right-[-20%] w-[60vw] h-[60vw] bg-indigo-500/5 rounded-full blur-[120px] animate-blob animation-delay-2000 mix-blend-multiply"></div>
+          
+          {/* 3. The Tech Grid */}
+          <div className="absolute inset-0 bg-grid-tech-premium opacity-100"></div>
+
+          {/* 4. DYNAMIC SNAKE ANIMATIONS (New Logic) */}
+          <GridAnimations />
+
+          {/* 5. Fade Out Bottom */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#f8fafc] via-transparent to-transparent h-full"></div>
+      </div>
       
       {/* --- OVERLAY MODAL FOR ANALYSIS --- */}
       {(loadingState.status === 'analyzing' || loadingState.status === 'error') && (
@@ -317,7 +447,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col md:flex-row h-[420px] md:h-[320px]">
                     {/* Left: Image Sensor */}
                     <div className="relative w-full h-[180px] md:h-full md:w-5/12 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
-                        <div className="absolute inset-0 bg-grid-tech"></div>
+                        <div className="absolute inset-0 bg-grid-tech-premium opacity-20"></div>
                         <img 
                           src={previewUrl!} 
                           alt="Target" 
